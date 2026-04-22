@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Food Calorie Estimator</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .card {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+      padding: 36px 32px;
+      max-width: 480px;
+      width: 100%;
+    }
+    h1 { text-align: center; font-size: 1.6rem; color: #333; margin-bottom: 6px; }
+    .subtitle { text-align: center; color: #888; font-size: 0.9rem; margin-bottom: 28px; }
+    label { font-size: 0.85rem; color: #555; font-weight: 600; display: block; margin-bottom: 6px; }
+    .upload-area {
+      border: 2px dashed #c3cfe2;
+      border-radius: 12px;
+      padding: 28px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s;
+      margin-bottom: 20px;
+      position: relative;
+    }
+    .upload-area:hover { border-color: #667eea; }
+    .upload-area input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .upload-area p { color: #aaa; font-size: 0.9rem; }
+    .upload-area .icon { font-size: 2.5rem; margin-bottom: 8px; }
+    #preview {
+      width: 100%; max-height: 220px; object-fit: contain;
+      border-radius: 10px; display: none; margin-bottom: 20px; border: 1px solid #eee;
+    }
+    .row { display: flex; gap: 14px; margin-bottom: 20px; }
+    .field { flex: 1; }
+    select, input[type="number"] {
+      width: 100%; padding: 10px 12px; border: 1px solid #ddd;
+      border-radius: 10px; font-size: 0.95rem; background: #fafafa;
+      outline: none; transition: border-color 0.2s;
+    }
+    select:focus, input[type="number"]:focus { border-color: #667eea; }
+    #status-bar {
+      background: #f0f4ff; border-left: 4px solid #667eea;
+      border-radius: 8px; padding: 10px 14px; font-size: 0.85rem;
+      color: #555; margin-bottom: 20px; min-height: 40px;
+    }
+    #result-box {
+      display: none;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-radius: 14px; padding: 22px; text-align: center;
+      color: white; margin-bottom: 20px;
+    }
+    #result-box .food-name { font-size: 1.1rem; font-weight: 600; margin-bottom: 4px; opacity: 0.9; }
+    #result-box .calories { font-size: 2.8rem; font-weight: 800; line-height: 1.1; }
+    #result-box .unit { font-size: 1rem; opacity: 0.8; }
+    #result-box .confidence { margin-top: 8px; font-size: 0.8rem; opacity: 0.75; }
+    .tip {
+      background: #fff8e1; border-radius: 10px; padding: 12px 16px;
+      font-size: 0.8rem; color: #7a6000; margin-bottom: 20px; display: none;
+    }
+    .btn {
+      width: 100%; padding: 13px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white; border: none; border-radius: 12px;
+      font-size: 1rem; font-weight: 600; cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    .btn:hover { opacity: 0.92; transform: translateY(-1px); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .all-predictions { margin-top: 16px; display: none; }
+    .all-predictions h3 { font-size: 0.85rem; color: #888; margin-bottom: 10px; }
+    .pred-row { display: flex; align-items: center; gap: 10px; margin-bottom: 7px; }
+    .pred-label { font-size: 0.82rem; color: #555; width: 120px; flex-shrink: 0; }
+    .pred-bar-bg { flex: 1; height: 8px; background: #eee; border-radius: 99px; overflow: hidden; }
+    .pred-bar { height: 100%; background: linear-gradient(90deg,#667eea,#764ba2); border-radius: 99px; transition: width 0.4s; }
+    .pred-pct { font-size: 0.78rem; color: #888; width: 38px; text-align: right; }
+  </style>
+</head>
+<body>
+<div class="card">
+  <h1>🍽️ Food Calorie Estimator</h1>
+  <p class="subtitle">Upload a food photo — AI predicts the dish &amp; calories</p>
+
+  <div class="upload-area">
+    <div class="icon">📷</div>
+    <p>Click or drag an image here</p>
+    <input type="file" id="imageUpload" accept="image/*" />
+  </div>
+
+  <img id="preview" alt="Food preview" />
+
+  <div id="status-bar">⏳ Loading model, please wait...</div>
+
+  <div class="row">
+    <div class="field">
+      abel for="foodClass">Detected Food</label>
+      <select id="foodClass">
+        <option value="">-- Upload image first --</option>
+        <option value="IDLY">Idly</option>
+        <option value="Jilebi">Jilebi</option>
+        <option value="burger">Burger</option>
+        <option value="Masal...Dosa">Masala Dosa</option>
+        <option value="paani_puri">Paani Puri</option>
+        <option value="dhokla">Dhokla</option>
+        <option value="butter_naan">Butter Naan</option>
+        <option value="pizza">Pizza</option>
+      </select>
+    </div>
+    <div class="field">
+      abel for="servings">Servings</label>
+      <input type="number" id="servings" value="1" min="0.5" max="10" step="0.5" />
+    </div>
+  </div>
+
+  <div id="result-box">
+    <div class="food-name" id="res-food"></div>
+    <div class="calories" id="res-cal">--</div>
+    <div class="unit">kcal per serving</div>
+    <div class="confidence" id="res-conf"></div>
+  </div>
+
+  <div class="tip" id="tip-box"></div>
+
+  <button class="btn" id="calcBtn" disabled>Upload an image to begin</button>
+
+  <div class="all-predictions" id="all-pred">
+    <h3>All class probabilities</h3>
+    <div id="pred-bars"></div>
+  </div>
+</div>
+
+<script>
+  // ✅ MODEL FOLDER NAME — set to "index" as you renamed it
+  const TM_MODEL_URL = "./index/";
+
+  const calorieMap = {
+    "IDLY":          58,
+    "Jilebi":        150,
+    "burger":        295,
+    "Masal...Dosa":  387,
+    "paani_puri":    60,
+    "dhokla":        160,
+    "butter_naan":   300,
+    "pizza":         285
+  };
+
+  const tipMap = {
+    "IDLY":         "Idly is low-fat and easy to digest — great for breakfast!",
+    "Jilebi":       "Jilebi is high in sugar. Enjoy in moderation.",
+    "burger":       "Burgers can be high in saturated fat. Opt for grilled versions.",
+    "Masal...Dosa": "Masala Dosa has a good mix of carbs and protein.",
+    "paani_puri":   "Paani Puri is a light snack — watch the chutney calories!",
+    "dhokla":       "Dhokla is a healthy steamed snack, rich in protein.",
+    "butter_naan":  "Butter Naan is calorie-dense. Pair with dal for balance.",
+    "pizza":        "Pizza varies widely. Thin crust with veggies is a healthier choice."
+  };
+
+  let model, currentTopClass = "", currentConfidence = 0;
+
+  const statusBar  = document.getElementById("status-bar");
+  const calcBtn    = document.getElementById("calcBtn");
+  const imageUpload= document.getElementById("imageUpload");
+  const preview    = document.getElementById("preview");
+  const resultBox  = document.getElementById("result-box");
+  const resFoodEl  = document.getElementById("res-food");
+  const resCalEl   = document.getElementById("res-cal");
+  const resConfEl  = document.getElementById("res-conf");
+  const tipBox     = document.getElementById("tip-box");
+  const allPred    = document.getElementById("all-pred");
+  const predBars   = document.getElementById("pred-bars");
+  const foodSelect = document.getElementById("foodClass");
+  const servingsEl = document.getElementById("servings");
+
+  // Load Teachable Machine model
+  async function loadModel() {
+    try {
+      model = await tmImage.load(TM_MODEL_URL + "model.json", TM_MODEL_URL + "metadata.json");
+      statusBar.textContent = "✅ Model loaded. Upload an image to begin.";
+      statusBar.style.borderColor = "#4caf50";
+    } catch (e) {
+      statusBar.textContent = "❌ Could not load model. Make sure the 'index' folder is in the same folder as index.html";
+      statusBar.style.borderColor = "#f44336";
+      console.error(e);
+    }
+  }
+
+  // Predict from uploaded image
+  async function predictImage(imgEl) {
+    if (!model) return;
+    statusBar.textContent = "🔍 Analysing image...";
+    const predictions = await model.predict(imgEl);
+    predictions.sort((a, b) => b.probability - a.probability);
+
+    const top = predictions[0];
+    currentTopClass   = top.className;
+    currentConfidence = top.probability;
+
+    // Auto-select in dropdown
+    for (let opt of foodSelect.options) {
+      if (opt.value === currentTopClass) { foodSelect.value = currentTopClass; break; }
+    }
+
+    // Draw bars
+    predBars.innerHTML = "";
+    predictions.forEach(p => {
+      const pct = (p.probability * 100).toFixed(1);
+      predBars.innerHTML += `
+        <div class="pred-row">
+          <span class="pred-label">${p.className}</span>
+          <div class="pred-bar-bg"><div class="pred-bar" style="width:${pct}%"></div></div>
+          <span class="pred-pct">${pct}%</span>
+        </div>`;
+    });
+    allPred.style.display = "block";
+
+    statusBar.textContent = `🎯 Detected: ${currentTopClass} (${(currentConfidence*100).toFixed(1)}% confidence)`;
+    calcBtn.disabled = false;
+    calcBtn.textContent = "Calculate Calories";
+    showCalories();
+  }
+
+  function showCalories() {
+    const food     = foodSelect.value;
+    const servings = parseFloat(servingsEl.value) || 1;
+    if (!food || !calorieMap[food]) return;
+
+    const total = Math.round(calorieMap[food] * servings);
+    resFoodEl.textContent = food === "Masal...Dosa" ? "Masala Dosa" : food;
+    resCalEl.textContent  = total;
+    resConfEl.textContent = currentConfidence
+      ? `Confidence: ${(currentConfidence*100).toFixed(1)}% · ${servings} serving(s)`
+      : `${servings} serving(s)`;
+    resultBox.style.display = "block";
+
+    if (tipMap[food]) {
+      tipBox.textContent   = "💡 " + tipMap[food];
+      tipBox.style.display = "block";
+    }
+  }
+
+  // Handle image upload
+  imageUpload.addEventListener("change", e => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      preview.src = reader.result;
+      preview.style.display = "block";
+      preview.onload = () => predictImage(preview);
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // Manual calculate button
+  calcBtn.addEventListener("click", showCalories);
+
+  // Recalculate when servings change
+  servingsEl.addEventListener("input", () => { if (resultBox.style.display !== "none") showCalories(); });
+
+  // Start loading model immediately
+  loadModel();
+</script>
+</body>
+</html>
