@@ -1,0 +1,15 @@
+name: Move weights.bin to my_model
+on:
+  workflow_dispatch:
+jobs:
+  move-file:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Move weights.bin
+        run: |
+          git mv index/weights.bin my_model/weights.bin
+          git config user.email "action@github.com"
+          git config user.name "GitHub Action"
+          git commit -m "Move weights.bin from index/ to my_model/"
+          git push
