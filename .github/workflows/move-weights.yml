@@ -1,11 +1,13 @@
 name: Move weights.bin to my_model
 on:
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
   move-file:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Move weights.bin
         run: |
           git mv index/weights.bin my_model/weights.bin
