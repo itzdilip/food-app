@@ -82,6 +82,7 @@
           <div class="small">Estimated calories</div>
           <div class="big" id="caloriesValue">--</div>
           <div class="small" id="caloriesNote">Upload an image to predict food and calories.</div>
+                <button class="secondary" id="exportBtn" style="margin-top: 10px;">Export to Insurance</button>
         </div>
       </section>
 
@@ -161,6 +162,26 @@ Details: ${caloriesNote.textContent}`;
       a.click();
       URL.revokeObjectURL(a.href);
     });
+
+      document.getElementById('exportBtn').addEventListener('click', () => {
+  const exportData = {
+    foodName: foodClass.value,
+    calories: caloriesValue.textContent,
+    serving: document.getElementById('serving').value || '1',
+    imageName: imageName,
+    confidence: lastConfidence !== null ? `${(lastConfidence * 100).toFixed(1)}%` : 'N/A',
+    timestamp: new Date().toISOString(),
+    insuranceNote: 'Health tracking data for insurance purposes'
+  };
+  const jsonData = JSON.stringify(exportData, null, 2);
+  const blob = new Blob([jsonData], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'food-calorie-insurance-export.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  alert('Data exported successfully for insurance submission!');
+});
 
     async function initModel() {
       try {
