@@ -82,7 +82,7 @@
           <div class="small">Estimated calories</div>
           <div class="big" id="caloriesValue">--</div>
           <div class="small" id="caloriesNote">Upload an image to predict food and calories.</div>
-                <button class="secondary" id="exportBtn" style="margin-top: 10px;">Export Session Log (CSV)</button>
+                <button class="secondary" id="exportBtn" style="margin-top: 10px;">Export Google Fit JSON</button>
         </div>
       </section>
 
@@ -164,8 +164,7 @@ Details: ${caloriesNote.textContent}`;
     });
 
       const foodLog = []; document.getElementById('exportBtn').addEventListener('click', () => {
-  if (foodLog.length === 0) { alert('No food items calculated yet. Please calculate at least one item first.'); return; }   const header = ['Timestamp', 'Food', 'Calories (kcal)', 'Servings', 'Confidence', 'Image'];   const rows = foodLog.map(e => [e.timestamp, e.food, e.calories, e.servings, e.confidence, e.image]);   const csv = [header, ...rows].map(r => r.join(',')).join('
-');   const blob = new Blob([csv], { type: 'text/csv' });   const a = document.createElement('a');   a.href = URL.createObjectURL(blob);   a.download = `gain-session-log-${new Date().toISOString().split('T')[0]}.csv`;   a.click();   URL.revokeObjectURL(a.href);   alert(`Session log exported! ${foodLog.length} entry(s) saved.`);
+  const now = Date.now();   const startNano = (now * 1e6).toString();   const endNano = ((now + 1000) * 1e6).toString();   const fitData = {     dataSourceId: 'derived:com.google.nutrition:G.A.I.N',     point: [{       startTimeNanos: startNano,       endTimeNanos: endNano,       dataTypeName: 'com.google.nutrition',       value: [{ mapVal: [         { key: 'food_item', value: { stringVal: foodClass.value } },         { key: 'calories',  value: { fpVal: calorieMap[foodClass.value] || 0 } },         { key: 'servings',  value: { fpVal: parseFloat(document.getElementById('serving').value || '1') } },         { key: 'confidence', value: { stringVal: lastConfidence !== null ? (lastConfidence*100).toFixed(1)+'%' : 'N/A' } },         { key: 'source',   value: { stringVal: 'G.A.I.N Food Detector' } }       ]}]     }]   };   const blob = new Blob([JSON.stringify(fitData, null, 2)], { type: 'application/json' });   const a = document.createElement('a');   a.href = URL.createObjectURL(blob);   a.download = `gain-googlefit-${new Date().toISOString().split('T')[0]}.json`;   a.click();   URL.revokeObjectURL(a.href);   alert('Google Fit JSON exported! Upload via Google Fit REST API.');
 });
 
     async function initModel() {
