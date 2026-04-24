@@ -1,219 +1,294 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Food Calorie App</title>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
-  <style>
-    :root {
-      --bg: #f6f7fb; --surface: #ffffff; --text: #1f2937; --muted: #6b7280; --primary: #0f766e; --border: #d1d5db;
-      --radius: 18px; --shadow: 0 12px 32px rgba(0,0,0,.08);
-    }
-    [data-theme="dark"] {
-      --bg: #0b1220; --surface: #111827; --text: #f3f4f6; --muted: #9ca3af; --primary: #14b8a6; --border: #374151;
-    }
-    * { box-sizing: border-box; }
-    body { margin: 0; font-family: Arial, Helvetica, sans-serif; background: var(--bg); color: var(--text); }
-    .wrap { max-width: 1080px; margin: 0 auto; padding: 32px 18px; }
-    .top { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:24px; }
-    .hero, .card { background: var(--surface); border:1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
-    .hero { padding: 28px; margin-bottom: 24px; }
-    .hero h1 { margin: 0 0 10px; font-size: 2rem; }
-    .hero p { margin: 0; color: var(--muted); line-height: 1.6; }
-    .tag { display:inline-block; margin-bottom:10px; background: rgba(20,184,166,.12); color: var(--primary); padding: 6px 12px; border-radius: 999px; font-size: .85rem; font-weight: 700; }
-    .grid { display:grid; grid-template-columns: 1.15fr .85fr; gap: 20px; }
-    .card { padding: 22px; }
-    label { display:block; margin: 14px 0 8px; font-weight: 700; }
-    input, select { width:100%; padding: 12px 14px; border:1px solid var(--border); border-radius: 12px; background: var(--surface); color: var(--text); }
-    button { border:none; background: var(--primary); color:#fff; padding: 12px 18px; border-radius: 999px; cursor:pointer; font-weight:700; }
-    .secondary { background: transparent; color: var(--text); border:1px solid var(--border); }
-    .actions { display:flex; flex-wrap:wrap; gap:10px; margin-top: 16px; }
-    .result, .preview { margin-top:18px; border:1px dashed var(--border); border-radius: 14px; padding: 16px; background: rgba(255,255,255,.2); }
-    .big { font-size: 2rem; color: var(--primary); font-weight: 800; }
-    .small { color: var(--muted); font-size: .95rem; line-height:1.5; }
-    table { width:100%; border-collapse: collapse; margin-top: 10px; }
-    th, td { text-align:left; padding: 10px 8px; border-bottom:1px solid var(--border); }
-    img.preview-img { max-width:100%; max-height:280px; display:none; border-radius: 12px; margin-top: 10px; }
-    #label-container div { margin: 6px 0; color: var(--muted); }
-    code { background: rgba(127,127,127,.12); padding: 2px 6px; border-radius: 6px; }
-    @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } .top { flex-direction:column; align-items:flex-start; } }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>G.A.I.N - ADR2</title>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+<style>
+:root {
+  --bg: #f6f7fb; --surface: #ffffff; --text: #1f2937; --muted: #6b7280; --primary: #0f766e; --border: #d1d5db;
+  --radius: 18px; --shadow: 0 12px 32px rgba(0,0,0,.08);
+}
+[data-theme="dark"] {
+  --bg: #0b1220; --surface: #111827; --text: #f3f4f6; --muted: #9ca3af; --primary: #14b8a6; --border: #374151;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: Arial, Helvetica, sans-serif; background: var(--bg); color: var(--text); }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 32px 18px; }
+.top { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:24px; }
+.hero, .card { background: var(--surface); border:1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+.hero { padding: 28px; margin-bottom: 24px; }
+.hero h1 { margin: 0 0 10px; font-size: 2rem; }
+.hero p { margin: 0; color: var(--muted); line-height: 1.6; }
+.tag { display:inline-block; margin-bottom:10px; background: rgba(20,184,166,.12); color: var(--primary); padding: 6px 12px; border-radius: 999px; font-size: .85rem; font-weight: 700; }
+.grid { display:grid; grid-template-columns: 1.15fr .85fr; gap: 20px; }
+.card { padding: 22px; }
+label { display:block; margin: 14px 0 8px; font-weight: 700; }
+input, select { width:100%; padding: 12px 14px; border:1px solid var(--border); border-radius: 12px; background: var(--surface); color: var(--text); }
+button { border:none; background: var(--primary); color:#fff; padding: 12px 18px; border-radius: 999px; cursor:pointer; font-weight:700; }
+.secondary { background: transparent; color: var(--text); border:1px solid var(--border); }
+.actions { display:flex; flex-wrap:wrap; gap:10px; margin-top: 16px; }
+.result, .preview { margin-top:18px; border:1px dashed var(--border); border-radius: 14px; padding: 16px; background: rgba(255,255,255,.2); }
+.big { font-size: 2rem; color: var(--primary); font-weight: 800; }
+.small { color: var(--muted); font-size: .95rem; line-height:1.5; }
+table { width:100%; border-collapse: collapse; margin-top: 10px; }
+th, td { text-align:left; padding: 10px 8px; border-bottom:1px solid var(--border); }
+img.preview-img { max-width:100%; max-height:280px; display:none; border-radius: 12px; margin-top: 10px; }
+#label-container div { margin: 6px 0; color: var(--muted); }
+code { background: rgba(127,127,127,.12); padding: 2px 6px; border-radius: 6px; }
+@media (max-width: 860px) { .grid { grid-template-columns: 1fr; } .top { flex-direction:column; align-items:flex-start; } }
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="top">
-      <div>
-        <div class="tag">GitHub Pages ready</div>
-        <h1>Food Calorie Detector</h1>
+
+<div class="wrap">
+  <div id="gainConfig" data-yearly-target="500" data-discount-percent="10" style="display:none;"></div>
+  <div class="top">
+    <div>
+      <div class="tag">ADR2 Edition</div>
+      <h1>G.A.I.N</h1>
+    </div>
+    <button class="secondary" id="themeBtn">Toggle theme</button>
+  </div>
+
+  <section class="hero">
+    <p>G.A.I.N is an artificial Intelligence system backed by a trained model that can classify 10 types of food. Based on the food classification, calories, nutritional values (carbohydrates, proteins, fiber) and health points are associated. Points can be positive or negative depending on the food type one chooses and the balance of points after a yearly time frame ensures discounts to the health insurance premium.</p>
+    <div id="label-container"></div>
+  </section>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Upload and detect</h2>
+      <label>Food image</label>
+      <input id="imageUpload" type="file" accept="image/*">
+      <label>Detected / selected class</label>
+      <select id="foodClass"></select>
+      <label>Serving multiplier</label>
+      <input id="serving" type="number" min="0.25" step="0.25" value="1">
+      <div class="actions">
+        <button id="calcBtn">Calculate calories</button>
+        <button class="secondary" id="downloadBtn">Download result</button>
+        <button class="secondary" id="exportBtn">Export Session Log (CSV)</button>
       </div>
-      <button class="secondary" id="themeBtn">Toggle theme</button>
+      <div class="preview">
+        <div class="small">Image preview</div>
+        <img id="previewImg" class="preview-img" alt="Uploaded food preview">
+      </div>
+      <div class="result">
+        <div class="big" id="caloriesValue">--</div>
+        <div class="small" id="caloriesNote">Upload an image to predict food and calories.</div>
+        <div id="nutritionResult" style="margin-top:12px;"></div>
+        <div id="healthPointsResult" style="margin-top:8px;font-weight:700;"></div>
+      </div>
     </div>
 
-    <section class="hero">
-      <p>This single HTML file works as a static app for GitHub Pages. Keep this file as <code>index.html</code> in your repository root and keep your Teachable Machine export inside a folder named <code>my_model</code> next to it.</p>
-      <div id="label-container"></div>
-    </section>
-
-    <div class="grid">
-      <section class="card">
-        <h2>Upload and detect</h2>
-        <label for="imageUpload">Food image</label>
-        <input id="imageUpload" type="file" accept="image/*" />
-
-        <label for="foodClass">Detected / selected class</label>
-        <select id="foodClass"></select>
-
-        <label for="serving">Serving multiplier</label>
-        <input id="serving" type="number" min="0.25" step="0.25" value="1" />
-
-        <div class="actions">
-          <button id="calcBtn">Calculate calories</button>
-          <button class="secondary" id="downloadBtn">Download result</button>
-        </div>
-
-        <div class="preview">
-          <div class="small">Image preview</div>
-          <img id="previewImg" class="preview-img" alt="Uploaded food preview" />
-        </div>
-
-        <div class="result">
-          <div class="small">Estimated calories</div>
-          <div class="big" id="caloriesValue">--</div>
-          <div class="small" id="caloriesNote">Upload an image to predict food and calories.</div>
-        </div>
-      </section>
-
-      <section class="card">
+    <div>
+      <div class="card">
         <h2>Calories map</h2>
         <p class="small">Update these values if you want different calorie assumptions for each class.</p>
         <table id="calorieTable"></table>
-        <div class="result">
-          <div class="small"><strong>Required repo layout</strong></div>
-          <div class="small">
-            food-app/<br>
-            ├── index.html<br>
-            └── my_model/<br>
-            &nbsp;&nbsp;&nbsp;&nbsp;├── model.json<br>
-            &nbsp;&nbsp;&nbsp;&nbsp;├── metadata.json<br>
-            &nbsp;&nbsp;&nbsp;&nbsp;└── weights.bin
-          </div>
-        </div>
-      </section>
+      </div>
+      <div class="card" style="margin-top:20px;">
+        <h2>Nutrition Reference</h2>
+        <p class="small">Static nutritional values per 100g serving from food databases.</p>
+        <table id="nutritionTable"></table>
+      </div>
     </div>
   </div>
 
-  <script>
-    const calorieMap = {
-      "IDLY": 58,
-      "Masala-Dosa": 220,
-      "Pizza": 285,
-      "Jilabi": 300,
-      "Dhokala": 160,   "dalmakni": 181,   "samosa": 308,   "pakode": 287,   "Panipuri": 170,   "friedrice": 168
-    };
+  <div class="card" style="margin-top:20px;">
+    <h2>Diet Chart</h2>
+    <h3>Diet Chart &amp; Healthy Eating Tips</h3>
+    <ul>
+      <li><strong>Idly (58 kcal):</strong> Pair with sambar. Limit to 2-3 pieces per meal.</li>
+      <li><strong>Masala Dosa (220 kcal):</strong> Opt for less oil. Best as breakfast or lunch.</li>
+      <li><strong>Pizza (285 kcal):</strong> Restrict to once a week. Choose thin-crust with vegetables.</li>
+      <li><strong>Jilabi (300 kcal):</strong> High sugar. Avoid if diabetic or weight-managing.</li>
+      <li><strong>Dhokla (160 kcal):</strong> Low-fat fermented snack. Good for evenings.</li>
+      <li><strong>Dal Makhani (181 kcal):</strong> Good protein source. Limit butter/cream.</li>
+      <li><strong>Samosa (308 kcal):</strong> Deep-fried. Limit to one piece occasionally.</li>
+      <li><strong>Pakoda (287 kcal):</strong> Avoid frequent consumption. Try air-fried version.</li>
+      <li><strong>Pani Puri (170 kcal):</strong> Limit to 4-6 pieces per serving.</li>
+      <li><strong>Fried Rice (168 kcal):</strong> Use less oil. Opt for brown rice.</li>
+    </ul>
+    <p><strong>&#9432; Aim for a balanced plate:</strong> 50% vegetables, 25% protein, 25% whole grains.</p>
+  </div>
+</div>
 
-    const TM_MODEL_URL = './my_model/';
-    let model = null;
-    let labelContainer = document.getElementById('label-container');
+<script>
+// ===== DATA MAPS =====
+const calorieMap = {
+  "IDLY": 58, "Masala-Dosa": 220, "Pizza": 285, "Jilabi": 300,
+  "Dhokala": 160, "dalmakni": 181, "samosa": 308, "pakode": 287,
+  "Panipuri": 170, "friedrice": 168
+};
 
-    const foodClass = document.getElementById('foodClass');
-    const calorieTable = document.getElementById('calorieTable');
-    const caloriesValue = document.getElementById('caloriesValue');
-    const caloriesNote = document.getElementById('caloriesNote');
-    const imageUpload = document.getElementById('imageUpload');
-    const previewImg = document.getElementById('previewImg');
-    let imageName = 'No image selected';
-    let lastConfidence = null;
+// Nutritional data per 100g from food databases (carbs, protein, fiber in grams)
+const nutritionMap = {
+  "IDLY":        { carbs: 12.5, protein: 2.3,  fiber: 1.2,  healthScore: 8 },
+  "Masala-Dosa": { carbs: 32.0, protein: 5.0,  fiber: 1.7,  healthScore: 6 },
+  "Pizza":       { carbs: 36.0, protein: 12.0, fiber: 2.3,  healthScore: 3 },
+  "Jilabi":      { carbs: 62.4, protein: 4.2,  fiber: 1.0,  healthScore: 1 },
+  "Dhokala":     { carbs: 22.0, protein: 6.0,  fiber: 2.0,  healthScore: 7 },
+  "dalmakni":    { carbs: 20.5, protein: 6.8,  fiber: 3.5,  healthScore: 7 },
+  "samosa":      { carbs: 32.0, protein: 5.0,  fiber: 2.0,  healthScore: 3 },
+  "pakode":      { carbs: 37.7, protein: 11.3, fiber: 10.7, healthScore: 4 },
+  "Panipuri":    { carbs: 24.7, protein: 4.0,  fiber: 3.7,  healthScore: 4 },
+  "friedrice":   { carbs: 21.1, protein: 6.3,  fiber: 0.7,  healthScore: 5 }
+};
 
-    Object.keys(calorieMap).forEach(name => {
-      const option = document.createElement('option');
-      option.value = name;
-      option.textContent = name;
-      foodClass.appendChild(option);
-    });
+function calcHealthPoints(food, servings) {
+  const n = nutritionMap[food];
+  if (!n) return 0;
+  const base = (n.healthScore - 5) * 4;
+  const variation = Math.floor(Math.random() * 7) - 3;
+  return Math.round((base + variation) * servings);
+}
 
-    calorieTable.innerHTML = '<thead><tr><th>Food</th><th>Calories / serving</th></tr></thead><tbody>' +
-      Object.entries(calorieMap).map(([food, cal]) => `<tr><td>${food}</td><td>${cal}</td></tr>`).join('') + '</tbody>';
+const TM_MODEL_URL = './my_model/';
+let model = null;
+const labelContainer = document.getElementById('label-container');
+const foodClass = document.getElementById('foodClass');
+const calorieTable = document.getElementById('calorieTable');
+const nutritionTable = document.getElementById('nutritionTable');
+const caloriesValue = document.getElementById('caloriesValue');
+const caloriesNote = document.getElementById('caloriesNote');
+const imageUpload = document.getElementById('imageUpload');
+const previewImg = document.getElementById('previewImg');
+let imageName = 'No image selected';
+let lastConfidence = null;
 
-    document.getElementById('themeBtn').addEventListener('click', () => {
-      const root = document.documentElement;
-      root.setAttribute('data-theme', root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
-    });
+Object.keys(calorieMap).forEach(name => {
+  const option = document.createElement('option');
+  option.value = name;
+  option.textContent = name;
+  foodClass.appendChild(option);
+});
 
-    document.getElementById('calcBtn').addEventListener('click', () => {
-      const selected = foodClass.value;
-      const serving = parseFloat(document.getElementById('serving').value || '1');
-      const total = Math.round((calorieMap[selected] || 0) * serving);
-      caloriesValue.textContent = total + ' kcal';
-      const confidenceText = lastConfidence !== null ? ` • Confidence ${(lastConfidence * 100).toFixed(1)}%` : '';
-      caloriesNote.textContent = `${selected} × ${serving} serving(s) • ${imageName}${confidenceText}`;
-    });
+calorieTable.innerHTML = '<thead><tr><th>Food</th><th>Calories / serving</th></tr></thead><tbody>' +
+  Object.entries(calorieMap).map(([food, cal]) => `<tr><td>${food}</td><td>${cal}</td></tr>`).join('') +
+  '</tbody>';
 
-    document.getElementById('downloadBtn').addEventListener('click', () => {
-      const text = `Food: ${foodClass.value}
-Estimated Calories: ${caloriesValue.textContent}
-Details: ${caloriesNote.textContent}`;
-      const blob = new Blob([text], { type: 'text/plain' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'food-calorie-result.txt';
-      a.click();
-      URL.revokeObjectURL(a.href);
-    });
+nutritionTable.innerHTML = '<thead><tr><th>Food</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fiber (g)</th></tr></thead><tbody>' +
+  Object.entries(nutritionMap).map(([food, n]) =>
+    `<tr><td>${food}</td><td>${n.carbs}</td><td>${n.protein}</td><td>${n.fiber}</td></tr>`
+  ).join('') + '</tbody>';
 
-    async function initModel() {
-      try {
-        const modelURL = TM_MODEL_URL + 'model.json';
-        const metadataURL = TM_MODEL_URL + 'metadata.json';
-        model = await tmImage.load(modelURL, metadataURL);
-        labelContainer.innerHTML = '<div>Model loaded successfully. Upload an image.</div>';
-      } catch (err) {
-        console.error(err);
-        labelContainer.innerHTML = '<div>Model not loaded. Check that index.html and my_model are in the correct GitHub repository path.</div>';
-      }
-    }
+document.getElementById('themeBtn').addEventListener('click', () => {
+  const root = document.documentElement;
+  root.setAttribute('data-theme', root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+});
 
-    async function predictFromImageElement(imgElement) {
-      if (!model) {
-        labelContainer.innerHTML = '<div>Model not available yet.</div>';
-        return;
-      }
-      const prediction = await model.predict(imgElement);
-      prediction.sort((a, b) => b.probability - a.probability);
-      const top = prediction[0];
-      const className = top.className;
-      const probability = top.probability;
-      lastConfidence = probability;
+const foodLog = [];
 
-      labelContainer.innerHTML = prediction
-        .map(p => `<div>${p.className}: ${(p.probability * 100).toFixed(1)}%</div>`)
-        .join('');
+document.getElementById('calcBtn').addEventListener('click', () => {
+  const selected = foodClass.value;
+  const serving = parseFloat(document.getElementById('serving').value || '1');
+  const total = Math.round((calorieMap[selected] || 0) * serving);
+  const n = nutritionMap[selected] || {};
+  const carbs   = n.carbs   ? (n.carbs   * serving).toFixed(1) : 'N/A';
+  const protein  = n.protein  ? (n.protein  * serving).toFixed(1) : 'N/A';
+  const fiber    = n.fiber    ? (n.fiber    * serving).toFixed(1) : 'N/A';
+  const healthPts = calcHealthPoints(selected, serving);
+  const ptColor = healthPts >= 0 ? '#0f766e' : '#dc2626';
 
-      if (calorieMap[className] !== undefined) {
-        foodClass.value = className;
-        document.getElementById('calcBtn').click();
-      } else {
-        caloriesNote.textContent = `Predicted ${className}, but that class is not in calorieMap.`;
-      }
-    }
+  caloriesValue.textContent = total + ' kcal';
+  const confidenceText = lastConfidence !== null ? ' - Confidence ' + (lastConfidence * 100).toFixed(1) + '%' : '';
+  caloriesNote.textContent = selected + ' x ' + serving + ' serving(s) - ' + imageName + confidenceText;
 
-    function handleImageFile(file) {
-      if (!file) return;
-      imageName = file.name;
-      const reader = new FileReader();
-      reader.onload = () => {
-        previewImg.src = reader.result;
-        previewImg.style.display = 'block';
-        const img = new Image();
-        img.onload = () => predictFromImageElement(img);
-        img.src = reader.result;
-      };
-      reader.readAsDataURL(file);
-    }
+  document.getElementById('nutritionResult').innerHTML =
+    `<table><thead><tr><th>Nutrient</th><th>Per serving</th></tr></thead><tbody>` +
+    `<tr><td>Carbohydrates</td><td>${carbs} g</td></tr>` +
+    `<tr><td>Protein</td><td>${protein} g</td></tr>` +
+    `<tr><td>Fiber</td><td>${fiber} g</td></tr>` +
+    `</tbody></table>`;
 
-    imageUpload.addEventListener('change', e => handleImageFile(e.target.files?.[0]));
-    window.addEventListener('load', initModel);
-  </script>
-<section class="card" style="margin-top:24px;">   <div class="tag">Diet Chart</div>   <h2 style="margin:0 0 12px;">Diet Chart &amp; Healthy Eating Tips</h2>   <ul style="line-height:2;padding-left:20px;">     <li><strong>Idly (58 kcal/piece):</strong> Best consumed in the morning; pair with sambar for added protein and fiber. Limit to 2–3 pieces per meal.</li>     <li><strong>Masala Dosa (220 kcal):</strong> Good source of carbohydrates; opt for less oil. Have as breakfast or lunch, not dinner.</li>     <li><strong>Pizza (285 kcal/slice):</strong> High in sodium and saturated fat; restrict to occasional consumption (once a week). Choose thin-crust with vegetable toppings.</li>     <li><strong>Jilabi / Jalebi (300 kcal):</strong> High sugar dessert; consume in very small portions. Avoid if diabetic or weight-managing.</li>     <li><strong>Dhokla (160 kcal):</strong> Fermented, low-fat snack rich in protein. Suitable as an evening snack or light breakfast.</li>     <li><strong>Dal Makhani (181 kcal/serving):</strong> Good protein and fiber source; limit butter/cream. Pair with whole-wheat roti for a balanced meal.</li>     <li><strong>Samosa (308 kcal):</strong> Deep-fried; high in calories and trans fats. Limit to one piece occasionally; prefer baked versions.</li>     <li><strong>Pakoda (287 kcal):</strong> Avoid frequent consumption. Better as a monsoon treat; reduce oil by using an air fryer.</li>     <li><strong>Pani Puri (170 kcal):</strong> Watch hygiene and portion size. The tamarind water adds antioxidants; limit to 4–6 pieces.</li>     <li><strong>Fried Rice (168 kcal/serving):</strong> Use less oil and add vegetables. Opt for brown rice for extra fiber and nutrients.</li>   </ul>   <p style="margin-top:16px;color:var(--muted);font-size:.93rem;">&#9432; Daily calorie requirement varies by age, gender and activity level. Consult a nutritionist for a personalised plan. Aim for a balanced plate: 50% vegetables, 25% protein, 25% whole grains.</p> </section> </body>
+  document.getElementById('healthPointsResult').innerHTML =
+    `<span style="color:${ptColor}">Health Points: ${healthPts > 0 ? '+' : ''}${healthPts}</span>` +
+    `<span class="small" style="margin-left:10px;">(${healthPts >= 5 ? 'Healthy choice!' : healthPts >= 0 ? 'Moderate' : 'Unhealthy - use sparingly'})</span>`;
+
+  foodLog.push({
+    timestamp: new Date().toISOString(),
+    food: selected, calories: total, servings: serving,
+    carbs, protein, fiber,
+    healthPoints: healthPts,
+    confidence: lastConfidence !== null ? (lastConfidence*100).toFixed(1)+'%' : 'N/A',
+    image: imageName
+  });
+});
+
+document.getElementById('downloadBtn').addEventListener('click', () => {
+  const text = 'Food: ' + foodClass.value + '\nEstimated Calories: ' + caloriesValue.textContent + '\nDetails: ' + caloriesNote.textContent;
+  const blob = new Blob([text], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'food-calorie-result.txt';
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+document.getElementById('exportBtn').addEventListener('click', () => {
+  if (foodLog.length === 0) { alert('No food items calculated yet. Please calculate at least one item first.'); return; }
+  const header = ['Timestamp','Food','Calories (kcal)','Servings','Carbohydrates (g)','Protein (g)','Fiber (g)','Health Points','Confidence','Image'];
+  const rows = foodLog.map(e => [e.timestamp, e.food, e.calories, e.servings, e.carbs, e.protein, e.fiber, e.healthPoints, e.confidence, e.image]);
+  const csv = [header].concat(rows).map(r => r.join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'gain-session-log-' + new Date().toISOString().split('T')[0] + '.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  alert('Session log exported! ' + foodLog.length + ' entry(s) saved.');
+});
+
+async function initModel() {
+  try {
+    model = await tmImage.load(TM_MODEL_URL + 'model.json', TM_MODEL_URL + 'metadata.json');
+    labelContainer.innerHTML = '<div>Model loaded successfully. Upload an image.</div>';
+  } catch (err) {
+    console.error(err);
+    labelContainer.innerHTML = '<div>Model not loaded. Check that my_model folder is in the correct path.</div>';
+  }
+}
+
+async function predictFromImageElement(imgElement) {
+  if (!model) { labelContainer.innerHTML = '<div>Model not available yet.</div>'; return; }
+  const prediction = await model.predict(imgElement);
+  prediction.sort((a, b) => b.probability - a.probability);
+  const top = prediction[0];
+  lastConfidence = top.probability;
+  labelContainer.innerHTML = prediction.map(p => `<div>${p.className}: ${(p.probability * 100).toFixed(1)}%</div>`).join('');
+  if (calorieMap[top.className] !== undefined) {
+    foodClass.value = top.className;
+    document.getElementById('calcBtn').click();
+  } else {
+    caloriesNote.textContent = `Predicted ${top.className}, but that class is not in calorieMap.`;
+  }
+}
+
+function handleImageFile(file) {
+  if (!file) return;
+  imageName = file.name;
+  const reader = new FileReader();
+  reader.onload = () => {
+    previewImg.src = reader.result;
+    previewImg.style.display = 'block';
+    const img = new Image();
+    img.onload = () => predictFromImageElement(img);
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+imageUpload.addEventListener('change', e => handleImageFile(e.target.files?.[0]));
+
+const cfg = document.getElementById('gainConfig').dataset;
+console.log('G.A.I.N ADR2 Config:', cfg.yearlyTarget, cfg.discountPercent + '%');
+
+window.addEventListener('load', initModel);
+</script>
+</body>
+
 </html>
