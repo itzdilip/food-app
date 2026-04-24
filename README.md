@@ -2,12 +2,12 @@
 
 > **Gain Advantage through Intelligent Nutrition**
 
-[![GitHub Pages](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-teal?style=flat-square)](https://itzdilip.github.io/G-A-I-N/)
+[![Live Demo GitHub Pages](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-teal?style=flat-square)](https://itzdilip.github.io/G-A-I-N/)
 [![Branch](https://img.shields.io/badge/Pages%20Branch-itzdilip--patch--1-blue?style=flat-square)](https://github.com/itzdilip/G-A-I-N/tree/itzdilip-patch-1)
 
 ## Overview
 
-G.A.I.N is an Artificial Intelligence system backed by a trained Teachable Machine model that classifies **10 types of Indian and popular food**. Based on the food classification, calories and health points are associated. Points can be positive or negative depending on the food type, and the cumulative balance of points over a yearly time frame determines **discounts on health insurance premiums**.
+G.A.I.N is an Artificial Intelligence system backed by a trained Teachable Machine model that classifies **10 types of Indian and popular food**. Based on the food classification, calories, nutritional values (carbohydrates, proteins, fiber) and health points are associated. Points can be positive or negative depending on the food type, and the cumulative balance of points over a yearly time frame determines **discounts on health insurance premiums**.
 
 ## Live Demo
 
@@ -15,31 +15,38 @@ The app is deployed via **GitHub Pages** from the `itzdilip-patch-1` branch:
 
 **URL:** https://itzdilip.github.io/G-A-I-N/
 
-## App Pages
+## Repository Structure
+
+```
+G-A-I-N/
+├── .github/
+│   └── workflows/        # GitHub Actions CI/CD workflows
+├── my_model/             # Teachable Machine trained model files
+│   ├── model.json
+│   └── metadata.json
+├── index.html            # Main G.A.I.N app (ADR2 Edition)
+└── README.md             # This file
+```
+
+## App Page
 
 | Page | URL | Description |
 |---|---|---|
-| **index.html** | [Live](https://itzdilip.github.io/G-A-I-N/index.html) | Main G.A.I.N app — food image upload, AI detection, calorie calculation, session CSV export, diet chart |
-| **adr2.html** | [Live](https://itzdilip.github.io/G-A-I-N/adr2.html) | ADR2 Edition — all features of index.html plus nutritional data (carbs, protein, fiber) and randomised health points per food item |
+| **index.html** | [Live](https://itzdilip.github.io/G-A-I-N/index.html) | G.A.I.N ADR2 Edition — food image upload, AI detection, calorie calculation, nutritional data, health points, session CSV export, diet chart |
 
-## Features (index.html)
+## Features
 
 - Upload a food image and auto-detect the food type using a Teachable Machine AI model
 - Manually select food and serving size from the dropdown
 - Calculate estimated calories per serving
-- **Session Log CSV Export** — tracks every food item calculated in a session and exports as a `.csv` file (date-stamped)
+- **Nutritional data** — static carbohydrates, protein and fiber values per serving for all 10 food classes
+- **Health Points** — points per food entry based on a health score (1–10), displayed with colour coding (green = healthy, red = unhealthy)
+- **Nutrition Reference table** — sidebar table showing carbs / protein / fiber for all 10 foods
+- **Session Log CSV Export** — tracks every food item calculated in a session and exports as a `.csv` file (date-stamped) with columns: Timestamp, Food, Calories, Servings, Carbohydrates (g), Protein (g), Fiber (g), Health Points, Confidence, Image
 - Download single result as a `.txt` file
 - Diet Chart with healthy eating tips for all 10 food items
 - Dark / Light theme toggle
 - Fully responsive — works on mobile and desktop
-
-## Additional Features (adr2.html)
-
-- Everything in index.html, plus:
-- **Nutritional data** — static carbohydrates, protein and fiber values per serving for all 10 food classes (sourced from FatSecret, Clearcals, NutriScan)
-- **Health Points** — randomised points per food entry based on a health score (1–10), displayed with colour coding (green = healthy, red = unhealthy)
-- **Nutrition Reference table** — sidebar table showing carbs / protein / fiber for all 10 foods
-- Enhanced CSV export includes: Timestamp, Food, Calories, Servings, Carbohydrates (g), Protein (g), Fiber (g), Health Points, Confidence, Image
 
 ## Supported Food Classes
 
@@ -56,72 +63,32 @@ The app is deployed via **GitHub Pages** from the `itzdilip-patch-1` branch:
 | Pani Puri | 170 kcal | 24.7 | 4.0 | 3.7 |
 | Fried Rice | 168 kcal | 21.1 | 6.3 | 0.7 |
 
-## Diet Chart Summary
+## Diet Chart & Healthy Eating Tips
 
-Both pages include a built-in Diet Chart with recommendations for each food item:
-
-| Food | Tip |
-|---|---|
-| Idly | Pair with sambar. Limit to 2-3 pieces per meal |
-| Masala Dosa | Opt for less oil. Best as breakfast or lunch |
-| Pizza | Restrict to once a week. Choose thin-crust with vegetables |
-| Jilabi | High sugar. Avoid if diabetic or weight-managing |
-| Dhokla | Low-fat fermented snack. Good for evenings |
-| Dal Makhani | Good protein source. Limit butter/cream |
-| Samosa | Deep-fried. Limit to one piece occasionally |
-| Pakoda | Avoid frequent consumption. Try air-fried version |
-| Pani Puri | Limit to 4-6 pieces per serving |
-| Fried Rice | Use less oil. Opt for brown rice |
-
-> Aim for a balanced plate: 50% vegetables, 25% protein, 25% whole grains.
-
-## Repository Layout
-
-```
-G-A-I-N/
-├── index.html        # Main G.A.I.N app (GitHub Pages entry point)
-├── adr2.html         # ADR2 Edition — with nutrition data & health points
-└── my_model/
-    ├── model.json    # Teachable Machine model
-    ├── metadata.json # Class labels and metadata
-    └── weights.bin   # Trained model weights
-```
-
-## How to Use
-
-1. Go to the [Live Demo](https://itzdilip.github.io/G-A-I-N/)
-2. Upload a food image using the **Choose File** button
-3. The AI model will auto-detect the food and calculate calories
-4. Optionally adjust the **Serving multiplier** and click **Calculate calories**
-5. Click **Export Session Log (CSV)** to download a full session report
-6. Scroll down to view the **Diet Chart** for healthy eating tips
-7. For nutritional breakdown (carbs/protein/fiber) and health points, visit [adr2.html](https://itzdilip.github.io/G-A-I-N/adr2.html)
-
-## Export Options
-
-| Branch | Export Type | Description |
-|---|---|---|
-| `itzdilip-patch-1` (index.html) | **Session Log CSV** | Timestamp, Food, Calories, Servings, Confidence, Image |
-| `itzdilip-patch-1` (adr2.html) | **Enhanced Session Log CSV** | Adds Carbohydrates, Protein, Fiber, Health Points columns |
+- **Idly (58 kcal):** Pair with sambar. Limit to 2-3 pieces per meal.
+- **Masala Dosa (220 kcal):** Opt for less oil. Best as breakfast or lunch.
+- **Pizza (285 kcal):** Restrict to once a week. Choose thin-crust with vegetables.
+- **Jilabi (300 kcal):** High sugar. Avoid if diabetic or weight-managing.
+- **Dhokla (160 kcal):** Low-fat fermented snack. Good for evenings.
+- **Dal Makhani (181 kcal):** Good protein source. Limit butter/cream.
+- **Samosa (308 kcal):** Deep-fried. Limit to one piece occasionally.
+- **Pakoda (287 kcal):** Avoid frequent consumption. Try air-fried version.
+- **Pani Puri (170 kcal):** Limit to 4-6 pieces per serving.
+- **Fried Rice (168 kcal):** Use less oil. Opt for brown rice.
 
 ## Tech Stack
 
-- **Frontend:** Pure HTML, CSS, JavaScript (no frameworks)
-- **AI Model:** [Teachable Machine](https://teachablemachine.withgoogle.com/) by Google
-- **Deployment:** GitHub Pages (`itzdilip-patch-1` branch)
-- **Libraries:** TensorFlow.js, Teachable Machine Image library (via CDN)
+| Component | Technology |
+|---|---|
+| AI Model | Teachable Machine (Google) |
+| ML Runtime | TensorFlow.js |
+| Frontend | HTML, CSS, Vanilla JavaScript |
+| Hosting | GitHub Pages |
+| Model Files | `my_model/` (model.json + metadata.json) |
 
-## Configuration
+## Branch Info
 
-Yearly point target and insurance discount percentage are configurable via the hidden `gainConfig` element in `index.html`:
-
-```html
-<div id="gainConfig" data-yearly-target="500" data-discount-percent="10" style="display:none;"></div>
-```
-
-- **Yearly Target:** 500 points
-- **Discount:** 10% off health insurance premium upon reaching target
-
-## License
-
-MIT License — free to use and modify.
+| Branch | Purpose |
+|---|---|
+| `itzdilip-patch-1` | Active development + GitHub Pages deployment |
+| `main` | Base branch |
