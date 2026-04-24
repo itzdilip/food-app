@@ -82,7 +82,7 @@
           <div class="small">Estimated calories</div>
           <div class="big" id="caloriesValue">--</div>
           <div class="small" id="caloriesNote">Upload an image to predict food and calories.</div>
-                <button class="secondary" id="exportBtn" style="margin-top: 10px;">Export to Insurance</button>
+                <button class="secondary" id="exportBtn" style="margin-top: 10px;">Export Session Log (CSV)</button>
         </div>
       </section>
 
@@ -148,7 +148,7 @@
       const total = Math.round((calorieMap[selected] || 0) * serving);
       caloriesValue.textContent = total + ' kcal';
       const confidenceText = lastConfidence !== null ? ` • Confidence ${(lastConfidence * 100).toFixed(1)}%` : '';
-      caloriesNote.textContent = `${selected} × ${serving} serving(s) • ${imageName}${confidenceText}`;
+      caloriesNote.textContent = `${selected} × ${serving} serving(s) • ${imageName}${confidenceText}`;   foodLog.push({ timestamp: new Date().toISOString(), food: selected, calories: total, servings: serving, confidence: lastConfidence !== null ? (lastConfidence*100).toFixed(1)+'%' : 'N/A', image: imageName }); × ${serving} serving(s) • ${imageName}${confidenceText}`;
     });
 
     document.getElementById('downloadBtn').addEventListener('click', () => {
@@ -163,24 +163,9 @@ Details: ${caloriesNote.textContent}`;
       URL.revokeObjectURL(a.href);
     });
 
-      document.getElementById('exportBtn').addEventListener('click', () => {
-  const exportData = {
-    foodName: foodClass.value,
-    calories: caloriesValue.textContent,
-    serving: document.getElementById('serving').value || '1',
-    imageName: imageName,
-    confidence: lastConfidence !== null ? `${(lastConfidence * 100).toFixed(1)}%` : 'N/A',
-    timestamp: new Date().toISOString(),
-    insuranceNote: 'Health tracking data for insurance purposes'
-  };
-  const jsonData = JSON.stringify(exportData, null, 2);
-  const blob = new Blob([jsonData], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'food-calorie-insurance-export.json';
-  a.click();
-  URL.revokeObjectURL(a.href);
-  alert('Data exported successfully for insurance submission!');
+      const foodLog = []; document.getElementById('exportBtn').addEventListener('click', () => {
+  if (foodLog.length === 0) { alert('No food items calculated yet. Please calculate at least one item first.'); return; }   const header = ['Timestamp', 'Food', 'Calories (kcal)', 'Servings', 'Confidence', 'Image'];   const rows = foodLog.map(e => [e.timestamp, e.food, e.calories, e.servings, e.confidence, e.image]);   const csv = [header, ...rows].map(r => r.join(',')).join('
+');   const blob = new Blob([csv], { type: 'text/csv' });   const a = document.createElement('a');   a.href = URL.createObjectURL(blob);   a.download = `gain-session-log-${new Date().toISOString().split('T')[0]}.csv`;   a.click();   URL.revokeObjectURL(a.href);   alert(`Session log exported! ${foodLog.length} entry(s) saved.`);
 });
 
     async function initModel() {
