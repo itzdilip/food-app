@@ -38,31 +38,10 @@ th, td { text-align:left; padding: 10px 8px; border-bottom:1px solid var(--borde
 img.preview-img { max-width:100%; max-height:280px; display:none; border-radius: 12px; margin-top: 10px; }
 #label-container div { margin: 6px 0; color: var(--muted); }
 code { background: rgba(127,127,127,.12); padding: 2px 6px; border-radius: 6px; }
-#loginModal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
-#loginBox { background: var(--surface); margin: 15% auto; padding: 40px; border-radius: var(--radius); width: 90%; max-width: 400px; }
-#loginBox h2 { margin-top: 0; }
-.logged-in { display: none; }
-.logged-out { display: none; }
 @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } .top { flex-direction:column; align-items:flex-start; } }
 </style>
 </head>
 <body>
-
-<!-- Login Modal -->
-<div id="loginModal">
-  <div id="loginBox">
-    <h2>G.A.I.N Login</h2>
-    <p style="color:var(--muted);font-size:.9rem;">Please login to track your food intake.</p>
-    <label>Username</label>
-    <input type="text" id="loginUser" placeholder="Enter username" />
-    <label>Password</label>
-    <input type="password" id="loginPass" placeholder="Enter password" />
-    <p id="loginError" style="color:red;font-size:.85rem;display:none;">Invalid credentials. Try admin/admin123</p>
-    <div class="actions" style="margin-top:20px;">
-      <button onclick="doLogin()">Login</button>
-    </div>
-  </div>
-</div>
 
 <div class="wrap">
   <div id="gainConfig" data-yearly-target="500" data-discount-percent="10" style="display:none;"></div>
@@ -71,11 +50,7 @@ code { background: rgba(127,127,127,.12); padding: 2px 6px; border-radius: 6px; 
       <div class="tag">ADR2 Edition</div>
       <h1>G.A.I.N</h1>
     </div>
-    <div style="display:flex;gap:10px;align-items:center;">
-      <span id="userBadge" style="font-weight:700;color:var(--primary);"></span>
-      <button class="secondary" id="logoutBtn" onclick="doLogout()" style="display:none;">Logout</button>
-      <button class="secondary" id="themeBtn">Toggle theme</button>
-    </div>
+    <button class="secondary" id="themeBtn">Toggle theme</button>
   </div>
 
   <section class="hero">
@@ -143,38 +118,6 @@ code { background: rgba(127,127,127,.12); padding: 2px 6px; border-radius: 6px; 
 </div>
 
 <script>
-// ===== AUTH =====
-const USERS = { 'admin': 'admin123', 'user1': 'gain2024', 'demo': 'demo123' };
-let currentUser = null;
-
-function doLogin() {
-  const u = document.getElementById('loginUser').value.trim();
-  const p = document.getElementById('loginPass').value;
-  if (USERS[u] && USERS[u] === p) {
-    currentUser = u;
-    document.getElementById('loginModal').style.display = 'none';
-    document.getElementById('userBadge').textContent = 'Hi, ' + u;
-    document.getElementById('logoutBtn').style.display = '';
-    document.getElementById('loginError').style.display = 'none';
-  } else {
-    document.getElementById('loginError').style.display = 'block';
-  }
-}
-
-function doLogout() {
-  currentUser = null;
-  document.getElementById('loginModal').style.display = 'flex';
-  document.getElementById('userBadge').textContent = '';
-  document.getElementById('logoutBtn').style.display = 'none';
-  document.getElementById('loginUser').value = '';
-  document.getElementById('loginPass').value = '';
-}
-
-window.addEventListener('load', function() {
-  document.getElementById('loginModal').style.display = 'flex';
-  document.getElementById('loginModal').style.justifyContent = 'center';
-});
-
 // ===== DATA MAPS =====
 const calorieMap = {
   "IDLY": 58, "Masala-Dosa": 220, "Pizza": 285, "Jilabi": 300,
@@ -183,7 +126,6 @@ const calorieMap = {
 };
 
 // Nutritional data per 100g from food databases (carbs, protein, fiber in grams)
-// Sources: FatSecret, Clearcals, Hyprotein, NutriScan, Aashpazi
 const nutritionMap = {
   "IDLY":        { carbs: 12.5, protein: 2.3,  fiber: 1.2,  healthScore: 8 },
   "Masala-Dosa": { carbs: 32.0, protein: 5.0,  fiber: 1.7,  healthScore: 6 },
@@ -197,19 +139,17 @@ const nutritionMap = {
   "friedrice":   { carbs: 21.1, protein: 6.3,  fiber: 0.7,  healthScore: 5 }
 };
 
-// Points scale: healthScore 1-10, mapped to points range -20 to +20
-// Randomised within a band based on healthScore to simulate daily variation
 function calcHealthPoints(food, servings) {
   const n = nutritionMap[food];
   if (!n) return 0;
-  const base = (n.healthScore - 5) * 4; // score 1=>-16, 5=>0, 8=>+12, 10=>+20
-  const variation = Math.floor(Math.random() * 7) - 3; // -3 to +3 randomisation
+  const base = (n.healthScore - 5) * 4;
+  const variation = Math.floor(Math.random() * 7) - 3;
   return Math.round((base + variation) * servings);
 }
 
 const TM_MODEL_URL = './my_model/';
 let model = null;
-let labelContainer = document.getElementById('label-container');
+const labelContainer = document.getElementById('label-container');
 const foodClass = document.getElementById('foodClass');
 const calorieTable = document.getElementById('calorieTable');
 const nutritionTable = document.getElementById('nutritionTable');
@@ -244,14 +184,13 @@ document.getElementById('themeBtn').addEventListener('click', () => {
 const foodLog = [];
 
 document.getElementById('calcBtn').addEventListener('click', () => {
-  if (!currentUser) { alert('Please login first.'); document.getElementById('loginModal').style.display='flex'; return; }
   const selected = foodClass.value;
   const serving = parseFloat(document.getElementById('serving').value || '1');
   const total = Math.round((calorieMap[selected] || 0) * serving);
   const n = nutritionMap[selected] || {};
-  const carbs = n.carbs ? (n.carbs * serving).toFixed(1) : 'N/A';
-  const protein = n.protein ? (n.protein * serving).toFixed(1) : 'N/A';
-  const fiber = n.fiber ? (n.fiber * serving).toFixed(1) : 'N/A';
+  const carbs   = n.carbs   ? (n.carbs   * serving).toFixed(1) : 'N/A';
+  const protein  = n.protein  ? (n.protein  * serving).toFixed(1) : 'N/A';
+  const fiber    = n.fiber    ? (n.fiber    * serving).toFixed(1) : 'N/A';
   const healthPts = calcHealthPoints(selected, serving);
   const ptColor = healthPts >= 0 ? '#0f766e' : '#dc2626';
 
@@ -272,13 +211,8 @@ document.getElementById('calcBtn').addEventListener('click', () => {
 
   foodLog.push({
     timestamp: new Date().toISOString(),
-    user: currentUser,
-    food: selected,
-    calories: total,
-    servings: serving,
-    carbs: carbs,
-    protein: protein,
-    fiber: fiber,
+    food: selected, calories: total, servings: serving,
+    carbs, protein, fiber,
     healthPoints: healthPts,
     confidence: lastConfidence !== null ? (lastConfidence*100).toFixed(1)+'%' : 'N/A',
     image: imageName
@@ -296,18 +230,14 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
 });
 
 document.getElementById('exportBtn').addEventListener('click', () => {
-  if (!currentUser) { alert('Please login first.'); return; }
   if (foodLog.length === 0) { alert('No food items calculated yet. Please calculate at least one item first.'); return; }
-  const header = ['Timestamp','User','Food','Calories (kcal)','Servings','Carbohydrates (g)','Protein (g)','Fiber (g)','Health Points','Confidence','Image'];
-  const rows = foodLog.map(function(e) {
-    return [e.timestamp, e.user, e.food, e.calories, e.servings, e.carbs, e.protein, e.fiber, e.healthPoints, e.confidence, e.image];
-  });
-  const csv = [header].concat(rows).map(function(r) { return r.join(','); }).join('\n');
+  const header = ['Timestamp','Food','Calories (kcal)','Servings','Carbohydrates (g)','Protein (g)','Fiber (g)','Health Points','Confidence','Image'];
+  const rows = foodLog.map(e => [e.timestamp, e.food, e.calories, e.servings, e.carbs, e.protein, e.fiber, e.healthPoints, e.confidence, e.image]);
+  const csv = [header].concat(rows).map(r => r.join(',')).join('\n');
   const blob = new Blob([csv], { type: 'text/csv' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  const today = new Date().toISOString().split('T')[0];
-  a.download = 'gain-session-log-' + today + '.csv';
+  a.download = 'gain-session-log-' + new Date().toISOString().split('T')[0] + '.csv';
   a.click();
   URL.revokeObjectURL(a.href);
   alert('Session log exported! ' + foodLog.length + ' entry(s) saved.');
@@ -315,13 +245,11 @@ document.getElementById('exportBtn').addEventListener('click', () => {
 
 async function initModel() {
   try {
-    const modelURL = TM_MODEL_URL + 'model.json';
-    const metadataURL = TM_MODEL_URL + 'metadata.json';
-    model = await tmImage.load(modelURL, metadataURL);
+    model = await tmImage.load(TM_MODEL_URL + 'model.json', TM_MODEL_URL + 'metadata.json');
     labelContainer.innerHTML = '<div>Model loaded successfully. Upload an image.</div>';
   } catch (err) {
     console.error(err);
-    labelContainer.innerHTML = '<div>Model not loaded. Check that index.html and my_model are in the correct GitHub repository path.</div>';
+    labelContainer.innerHTML = '<div>Model not loaded. Check that my_model folder is in the correct path.</div>';
   }
 }
 
@@ -330,17 +258,13 @@ async function predictFromImageElement(imgElement) {
   const prediction = await model.predict(imgElement);
   prediction.sort((a, b) => b.probability - a.probability);
   const top = prediction[0];
-  const className = top.className;
-  const probability = top.probability;
-  lastConfidence = probability;
-  labelContainer.innerHTML = prediction
-    .map(p => `<div>${p.className}: ${(p.probability * 100).toFixed(1)}%</div>`)
-    .join('');
-  if (calorieMap[className] !== undefined) {
-    foodClass.value = className;
+  lastConfidence = top.probability;
+  labelContainer.innerHTML = prediction.map(p => `<div>${p.className}: ${(p.probability * 100).toFixed(1)}%</div>`).join('');
+  if (calorieMap[top.className] !== undefined) {
+    foodClass.value = top.className;
     document.getElementById('calcBtn').click();
   } else {
-    caloriesNote.textContent = `Predicted ${className}, but that class is not in calorieMap.`;
+    caloriesNote.textContent = `Predicted ${top.className}, but that class is not in calorieMap.`;
   }
 }
 
@@ -361,11 +285,9 @@ function handleImageFile(file) {
 imageUpload.addEventListener('change', e => handleImageFile(e.target.files?.[0]));
 
 const cfg = document.getElementById('gainConfig').dataset;
-const yearlyTarget = parseInt(cfg.yearlyTarget);
-const discountPercent = parseInt(cfg.discountPercent);
-console.log('G.A.I.N ADR2 Config:', yearlyTarget, discountPercent + '%');
+console.log('G.A.I.N ADR2 Config:', cfg.yearlyTarget, cfg.discountPercent + '%');
 
-initModel();
+window.addEventListener('load', initModel);
 </script>
 </body>
 </html>
