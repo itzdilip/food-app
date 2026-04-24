@@ -219,6 +219,31 @@ Details: ${caloriesNote.textContent}`;
     }
 
     imageUpload.addEventListener('change', e => handleImageFile(e.target.files?.[0]));
-    window.addEventListener('load', initModel);      // Read static config values from HTML     const cfg = document.getElementById('gainConfig').dataset;     const yearlyTarget   = parseInt(cfg.yearlyTarget);    // 500 points     const discountPercent = parseInt(cfg.discountPercent); // 10%     console.log('G.A.I.N Config — Yearly Target:', yearlyTarget, '| Discount:', discountPercent + '%');
-  </script> <div class="wrap"> <section class="card" style="margin-top:24px;">   <div class="tag">Diet Chart</div>   <h2 style="margin:0 0 12px;">Diet Chart &amp; Healthy Eating Tips</h2>   <ul style="line-height:2;padding-left:20px;">     <li><strong>Idly (58 kcal/piece):</strong> Best consumed in the morning; pair with sambar for protein and fiber. Limit to 2–3 pieces per meal.</li>     <li><strong>Masala Dosa (220 kcal):</strong> Good source of carbohydrates; opt for less oil. Have as breakfast or lunch, not dinner.</li>     <li><strong>Pizza (285 kcal/slice):</strong> High in sodium and saturated fat; restrict to once a week. Choose thin-crust with vegetable toppings.</li>     <li><strong>Jilabi / Jalebi (300 kcal):</strong> High sugar dessert; consume in very small portions. Avoid if diabetic or weight-managing.</li>     <li><strong>Dhokla (160 kcal):</strong> Fermented, low-fat snack rich in protein. Suitable as an evening snack or light breakfast.</li>     <li><strong>Dal Makhani (181 kcal/serving):</strong> Good protein and fiber source; limit butter/cream. Pair with whole-wheat roti.</li>     <li><strong>Samosa (308 kcal):</strong> Deep-fried; high in calories. Limit to one piece occasionally; prefer baked versions.</li>     <li><strong>Pakoda (287 kcal):</strong> Avoid frequent consumption. Reduce oil by using an air fryer.</li>     <li><strong>Pani Puri (170 kcal):</strong> Watch portion size. Limit to 4–6 pieces.</li>     <li><strong>Fried Rice (168 kcal/serving):</strong> Use less oil, add vegetables. Opt for brown rice for extra fiber.</li>   </ul>   <p style="margin-top:16px;color:var(--muted);font-size:.93rem;">&#9432; Daily calorie needs vary by age, gender and activity level. Aim for a balanced plate: 50% vegetables, 25% protein, 25% whole grains.</p> </section> </div> </body>
+window.addEventListener('load', initModel);
+// Read static config values from HTML
+const cfg = document.getElementById('gainConfig').dataset;
+const yearlyTarget = parseInt(cfg.yearlyTarget);
+const discountPercent = parseInt(cfg.discountPercent);
+console.log('G.A.I.N Config:', yearlyTarget, discountPercent + '%');
+  </script>
+<div class="wrap">
+<section class="card" style="margin-top:24px;">
+  <div class="tag">Diet Chart</div>
+  <h2 style="margin:0 0 12px;">Diet Chart &amp; Healthy Eating Tips</h2>
+  <ul style="line-height:2;padding-left:20px;">
+    <li><strong>Idly (58 kcal):</strong> Pair with sambar. Limit to 2-3 pieces per meal.</li>
+    <li><strong>Masala Dosa (220 kcal):</strong> Opt for less oil. Best as breakfast or lunch.</li>
+    <li><strong>Pizza (285 kcal):</strong> Restrict to once a week. Choose thin-crust with vegetables.</li>
+    <li><strong>Jilabi (300 kcal):</strong> High sugar. Avoid if diabetic or weight-managing.</li>
+    <li><strong>Dhokla (160 kcal):</strong> Low-fat fermented snack. Good for evenings.</li>
+    <li><strong>Dal Makhani (181 kcal):</strong> Good protein source. Limit butter/cream.</li>
+    <li><strong>Samosa (308 kcal):</strong> Deep-fried. Limit to one piece occasionally.</li>
+    <li><strong>Pakoda (287 kcal):</strong> Avoid frequent consumption. Try air-fried version.</li>
+    <li><strong>Pani Puri (170 kcal):</strong> Limit to 4-6 pieces per serving.</li>
+    <li><strong>Fried Rice (168 kcal):</strong> Use less oil. Opt for brown rice.</li>
+  </ul>
+  <p style="margin-top:16px;color:var(--muted);font-size:.93rem;">&#9432; Aim for a balanced plate: 50% vegetables, 25% protein, 25% whole grains.</p>
+</section>
+</div>
+</body>
 </html>
