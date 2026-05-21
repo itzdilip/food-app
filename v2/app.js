@@ -8,7 +8,16 @@ let imageName = 'No image selected';
 const foodLog = JSON.parse(localStorage.getItem('gain_food_log')) || [];
 
 // Persistent Database Cache Logic
-let LOCAL_DB_CACHE = JSON.parse(localStorage.getItem('gain_food_cache')) || { ...FOOD_DATABASE };
+let LOCAL_DB_CACHE;
+try {
+  const cached = localStorage.getItem('gain_food_cache');
+  // Handle "undefined" string or corrupted JSON
+  LOCAL_DB_CACHE = (cached && cached !== "undefined") ? JSON.parse(cached) : { ...FOOD_DATABASE };
+} catch (e) {
+  console.warn('Cache corrupted, resetting to defaults.');
+  LOCAL_DB_CACHE = { ...FOOD_DATABASE };
+}
+
 const LAST_SYNC_TIME = parseInt(localStorage.getItem('gain_last_sync') || '0');
 const SYNC_INTERVAL = 2 * 24 * 60 * 60 * 1000; // 2 Days
 
@@ -60,9 +69,14 @@ async function backgroundUpdateDB() {
   let updatedCount = 0;
 
   for (const key of keys) {
-    // Only fetch if it hasn't been synced in this session or we want a fresh update
     const freshData = await fetchNutritionFromAPI(LOCAL_DB_CACHE[key].name);
     
+    // Stop immediately if keys are wrong
+    if (freshData === 'AUTH_ERROR') {
+      console.error('Background Sync: Aborted due to invalid API keys.');
+      break;
+    }
+
     if (freshData) {
       LOCAL_DB_CACHE[key] = {
         ...LOCAL_DB_CACHE[key],
@@ -81,7 +95,6 @@ async function backgroundUpdateDB() {
     }
 
     // Respect API rate limits (Edamam Free tier is ~10/min)
-    // We wait 6 seconds between requests to ensure we don't get blocked
     await new Promise(r => setTimeout(r, 6500)); 
   }
 
@@ -133,23 +146,21 @@ async function initModel() {
 
 // ===== API LOGIC (Edamam) =====
 async function fetchNutritionFromAPI(foodName) {
-  const appId = apiAppIdInput.value;
-  const appKey = apiKeyInput.value;
+  const appId = apiAppIdInput.value.trim();
+  const appKey = apiKeyInput.value.trim();
   
-  if (!appId || !appKey) {
-    console.warn('API Sync: Missing App ID or Key.');
-    return null;
-  }
+  if (!appId || !appKey) return null;
 
   try {
     const searchUrl = `https://api.edamam.com/api/food-database/v2/parser?app_id=${appId}&app_key=${appKey}&ingr=${encodeURIComponent(foodName)}&nutrition-type=logging`;
     const response = await fetch(searchUrl);
     
     if (!response.ok) {
-      console.error(`API Error: ${response.status} ${response.statusText}`);
       if (response.status === 401 || response.status === 403) {
-        console.error('Invalid API Keys. Please check your Edamam credentials.');
+        console.error('API Error: 401/403 - Unauthorized. Check your credentials.');
+        return 'AUTH_ERROR';
       }
+      console.error(`API Error: ${response.status} ${response.statusText}`);
       return null;
     }
 
@@ -167,8 +178,6 @@ async function fetchNutritionFromAPI(foodName) {
         fiber: (nut.FIBTG || 0).toFixed(1),
         healthScore: 5 
       };
-    } else {
-      console.warn(`API: No data found for "${foodName}"`);
     }
     return null;
   } catch (err) {
@@ -193,21 +202,18 @@ async function updateResultUI(selectedKey, serving) {
   if (dataSource.value === 'api') {
     showLoading(true);
     const query = LOCAL_DB_CACHE[selectedKey]?.name || selectedKey;
-    foodData = await fetchNutritionFromAPI(query);
+    const result = await fetchNutritionFromAPI(query);
     showLoading(false);
     
-    // Check if API actually returned valid data
-    if (foodData && foodData.calories > 0) {
+    if (result && result !== 'AUTH_ERROR') {
+      foodData = result;
       isFromAPI = true;
     }
   }
 
   if (!foodData) {
     foodData = LOCAL_DB_CACHE[selectedKey];
-    // If it was already synced before, it's effectively "online" data even if cached now
-    if (foodData && foodData.source === 'api') {
-      isFromAPI = true; 
-    }
+    if (foodData && foodData.source === 'api') isFromAPI = true;
     
     if (!foodData) {
       caloriesNote.textContent = 'Food not found in local database.';
@@ -215,25 +221,20 @@ async function updateResultUI(selectedKey, serving) {
     }
   }
 
-  // Sync Logic: If fresh API data is different, update cache and UI
+  // Sync Logic: Update cache if fresh API data is different
   if (isFromAPI && dataSource.value === 'api') {
     const existing = LOCAL_DB_CACHE[selectedKey];
-    const hasChanged = !existing || 
-                     existing.calories !== foodData.calories || 
-                     existing.carbs !== foodData.carbs || 
-                     existing.protein !== foodData.protein ||
-                     existing.source !== 'api';
+    const hasChanged = !existing || existing.source !== 'api' || 
+                     existing.calories !== foodData.calories;
 
     if (hasChanged) {
       LOCAL_DB_CACHE[selectedKey] = {
         ...LOCAL_DB_CACHE[selectedKey],
         ...foodData,
-        source: 'api',
-        tip: existing?.tip || "Refreshed via Live API"
+        source: 'api'
       };
       localStorage.setItem('gain_food_cache', JSON.stringify(LOCAL_DB_CACHE));
       ui.renderReferenceTables(LOCAL_DB_CACHE, calorieTable, nutritionTable);
-      console.log(`Cache Updated for: ${foodData.name}`);
     }
   }
 
@@ -283,13 +284,14 @@ function setupEventListeners() {
     localStorage.setItem('gain_data_mode', mode);
   });
 
-  apiKeyInput.addEventListener('input', (e) => localStorage.setItem('gain_api_key', e.target.value));
-  apiAppIdInput.addEventListener('input', (e) => localStorage.setItem('gain_api_id', e.target.value));
+  apiKeyInput.addEventListener('input', (e) => localStorage.setItem('gain_api_key', e.target.value.trim()));
+  apiAppIdInput.addEventListener('input', (e) => localStorage.setItem('gain_api_id', e.target.value.trim()));
 
   document.getElementById('saveSettingsBtn').addEventListener('click', () => {
-    localStorage.setItem('gain_api_key', apiKeyInput.value);
-    localStorage.setItem('gain_api_id', apiAppIdInput.value);
-    alert('API Settings Saved Successfully!');
+    localStorage.setItem('gain_api_key', apiKeyInput.value.trim());
+    localStorage.setItem('gain_api_id', apiAppIdInput.value.trim());
+    alert('API Settings Saved! Refreshing to start sync...');
+    location.reload(); 
   });
 
   document.getElementById('calcBtn').addEventListener('click', () => {
