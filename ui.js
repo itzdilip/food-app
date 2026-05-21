@@ -51,7 +51,7 @@ export function renderHistory(foodLog, historyBody) {
   `).join('');
 }
 
-export function updateResultUI(elements, data) {
+export function updateResultDisplay(elements, data) {
   const { caloriesValue, caloriesNote, nutritionResult, healthPointsResult } = elements;
   const { name, serving, total, carbs, protein, fiber, healthPts, ptColor, imageName, lastConfidence, isFromAPI } = data;
 
