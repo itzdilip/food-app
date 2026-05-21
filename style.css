@@ -1,0 +1,272 @@
+:root {
+  --bg: #f6f7fb;
+  --surface: #ffffff;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --primary: #0f766e;
+  --primary-light: rgba(20, 184, 166, 0.12);
+  --border: #d1d5db;
+  --radius: 18px;
+  --shadow: 0 12px 32px rgba(0, 0, 0, .08);
+  --danger: #dc2626;
+  --success: #059669;
+}
+
+[data-theme="dark"] {
+  --bg: #0b1220;
+  --surface: #111827;
+  --text: #f3f4f6;
+  --muted: #9ca3af;
+  --primary: #14b8a6;
+  --border: #374151;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.wrap {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 32px 18px;
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.hero, .card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  transition: transform 0.2s;
+}
+
+.hero {
+  padding: 28px;
+  margin-bottom: 24px;
+}
+
+.hero h1 {
+  margin: 0 0 10px;
+  font-size: 2.25rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+
+.hero p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.tag {
+  display: inline-block;
+  margin-bottom: 10px;
+  background: var(--primary-light);
+  color: var(--primary);
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: .85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1.15fr .85fr;
+  gap: 20px;
+}
+
+.card {
+  padding: 24px;
+}
+
+.card h2 {
+  margin-top: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+label {
+  display: block;
+  margin: 14px 0 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+input, select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+input:focus, select:focus {
+  border-color: var(--primary);
+}
+
+button {
+  border: none;
+  background: var(--primary);
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.95rem;
+  transition: opacity 0.2s, transform 0.1s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.secondary {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.secondary:hover {
+  background: rgba(127, 127, 127, 0.05);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.result, .preview {
+  margin-top: 18px;
+  border: 1px dashed var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.big {
+  font-size: 2.25rem;
+  color: var(--primary);
+  font-weight: 800;
+}
+
+.small {
+  color: var(--muted);
+  font-size: .875rem;
+  line-height: 1.5;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  font-size: 0.9rem;
+}
+
+th, td {
+  text-align: left;
+  padding: 12px 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+th {
+  color: var(--muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+img.preview-img {
+  max-width: 100%;
+  max-height: 280px;
+  display: none;
+  border-radius: 12px;
+  margin-top: 10px;
+  object-fit: cover;
+}
+
+#label-container div {
+  margin: 6px 0;
+  color: var(--muted);
+}
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 5px solid #FFF;
+  border-bottom-color: var(--primary);
+  border-radius: 50%;
+  display: inline-block;
+  box-sizing: border-box;
+  animation: rotation 1s linear infinite;
+}
+
+@keyframes rotation {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.history-card {
+  margin-top: 24px;
+  overflow-x: auto;
+}
+
+.history-table {
+  min-width: 600px;
+}
+
+@media (max-width: 860px) {
+  .grid { grid-template-columns: 1fr; }
+  .top { flex-direction: column; align-items: flex-start; }
+  .hero h1 { font-size: 1.75rem; }
+}

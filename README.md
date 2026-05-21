@@ -15,6 +15,14 @@ The app is deployed via **GitHub Pages** from the `itzdilip-patch-1` branch:
 
 **URL:** https://itzdilip.github.io/G-A-I-N/
 
+## Documentation
+
+Comprehensive documentation for G.A.I.N is available in the [`docs/`](./docs/) directory:
+
+- [**Design Document**](./docs/DESIGN.md): Technical architecture and data flow.
+- [**User Guide**](./docs/USER_GUIDE.md): Instructions for using the application.
+- [**API Docs**](./docs/API.md): Details on modules and functions.
+
 ## Repository Structure
 
 ```
@@ -24,29 +32,27 @@ G-A-I-N/
 ├── my_model/             # Teachable Machine trained model files
 │   ├── model.json
 │   └── metadata.json
-├── index.html            # Main G.A.I.N app (ADR2 Edition)
+├── app.js                # Main application logic
+├── data.js               # Centralized food & nutrition database
+├── style.css             # Modernized styling
+├── index.html            # Main entry point (Refactored ADR2 Edition)
 └── README.md             # This file
 ```
 
-## App Page
-
-| Page | URL | Description |
-|---|---|---|
-| **index.html** | [Live](https://itzdilip.github.io/G-A-I-N/index.html) | G.A.I.N ADR2 Edition — food image upload, AI detection, calorie calculation, nutritional data, health points, session CSV export, diet chart |
-
 ## Features
 
-- Upload a food image and auto-detect the food type using a Teachable Machine AI model
-- Manually select food and serving size from the dropdown
-- Calculate estimated calories per serving
-- **Nutritional data** — static carbohydrates, protein and fiber values per serving for all 10 food classes
-- **Health Points** — points per food entry based on a health score (1–10), displayed with colour coding (green = healthy, red = unhealthy)
-- **Nutrition Reference table** — sidebar table showing carbs / protein / fiber for all 10 foods
-- **Session Log CSV Export** — tracks every food item calculated in a session and exports as a `.csv` file (date-stamped) with columns: Timestamp, Food, Calories, Servings, Carbohydrates (g), Protein (g), Fiber (g), Health Points, Confidence, Image
-- Download single result as a `.txt` file
-- Diet Chart with healthy eating tips for all 10 food items
-- Dark / Light theme toggle
-- Fully responsive — works on mobile and desktop
+- **Modular Architecture:** Code split into ES6 modules for better maintainability.
+- **Centralized Database:** All nutritional data and diet tips managed in a single `data.js` file.
+- **AI-Powered Detection:** Upload a food image and auto-detect the food type using a Teachable Machine AI model.
+- **Enhanced UI/UX:**
+    - Loading states with spinners during model initialization and prediction.
+    - **Session History:** Interactive table showing recent detections and health points.
+    - **Reset Session:** Ability to clear current log and reset the interface.
+- **Nutritional tracking:** Calculates calories, carbs, protein, and fiber based on serving size.
+- **Health Points System:** Gamified feedback based on food healthiness.
+- **CSV Export:** Comprehensive session log export.
+- **Responsive Design:** Optimized for both mobile and desktop with a modern "Card" based layout.
+- **Dark / Light Theme:** Seamless toggle for user preference.
 
 ## Supported Food Classes
 
@@ -63,26 +69,14 @@ G-A-I-N/
 | Pani Puri | 170 kcal | 24.7 | 4.0 | 3.7 |
 | Fried Rice | 168 kcal | 21.1 | 6.3 | 0.7 |
 
-## Diet Chart & Healthy Eating Tips
-
-- **Idly (58 kcal):** Pair with sambar. Limit to 2-3 pieces per meal.
-- **Masala Dosa (220 kcal):** Opt for less oil. Best as breakfast or lunch.
-- **Pizza (285 kcal):** Restrict to once a week. Choose thin-crust with vegetables.
-- **Jilabi (300 kcal):** High sugar. Avoid if diabetic or weight-managing.
-- **Dhokla (160 kcal):** Low-fat fermented snack. Good for evenings.
-- **Dal Makhani (181 kcal):** Good protein source. Limit butter/cream.
-- **Samosa (308 kcal):** Deep-fried. Limit to one piece occasionally.
-- **Pakoda (287 kcal):** Avoid frequent consumption. Try air-fried version.
-- **Pani Puri (170 kcal):** Limit to 4-6 pieces per serving.
-- **Fried Rice (168 kcal):** Use less oil. Opt for brown rice.
-
 ## Tech Stack
 
 | Component | Technology |
 |---|---|
 | AI Model | Teachable Machine (Google) |
 | ML Runtime | TensorFlow.js |
-| Frontend | HTML, CSS, Vanilla JavaScript |
+| Frontend | HTML5, Vanilla CSS3 (Custom Properties), ES6+ JavaScript |
+| Architecture | Modular Module Pattern |
 | Hosting | GitHub Pages |
 | Model Files | `my_model/` (model.json + metadata.json) |
 
@@ -90,5 +84,6 @@ G-A-I-N/
 
 | Branch | Purpose |
 |---|---|
-| `itzdilip-patch-1` | Active development + GitHub Pages deployment |
+| `may-changes` | Modernized & Modularized version (Active) |
+| `itzdilip-patch-1` | Legacy ADR2 version |
 | `main` | Base branch |
