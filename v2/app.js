@@ -136,16 +136,29 @@ async function fetchNutritionFromAPI(foodName) {
   const appId = apiAppIdInput.value;
   const appKey = apiKeyInput.value;
   
-  if (!appId || !appKey) return null;
+  if (!appId || !appKey) {
+    console.warn('API Sync: Missing App ID or Key.');
+    return null;
+  }
 
   try {
     const searchUrl = `https://api.edamam.com/api/food-database/v2/parser?app_id=${appId}&app_key=${appKey}&ingr=${encodeURIComponent(foodName)}&nutrition-type=logging`;
     const response = await fetch(searchUrl);
+    
+    if (!response.ok) {
+      console.error(`API Error: ${response.status} ${response.statusText}`);
+      if (response.status === 401 || response.status === 403) {
+        console.error('Invalid API Keys. Please check your Edamam credentials.');
+      }
+      return null;
+    }
+
     const data = await response.json();
     
     if (data.parsed && data.parsed.length > 0) {
       const food = data.parsed[0].food;
       const nut = food.nutrients;
+      console.log(`API Success: Fetched data for ${foodName}`);
       return {
         name: food.label,
         calories: Math.round(nut.ENERC_KCAL || 0),
@@ -154,10 +167,12 @@ async function fetchNutritionFromAPI(foodName) {
         fiber: (nut.FIBTG || 0).toFixed(1),
         healthScore: 5 
       };
+    } else {
+      console.warn(`API: No data found for "${foodName}"`);
     }
     return null;
   } catch (err) {
-    console.error('API Fetch Error:', err);
+    console.error('API Fetch Exception:', err);
     return null;
   }
 }
