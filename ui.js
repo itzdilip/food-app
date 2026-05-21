@@ -51,14 +51,17 @@ export function renderHistory(foodLog, historyBody) {
   `).join('');
 }
 
-export function updateResultDisplay(elements, data) {
+export function updateResultUI(elements, data) {
   const { caloriesValue, caloriesNote, nutritionResult, healthPointsResult } = elements;
-  const { name, serving, total, carbs, protein, fiber, healthPts, ptColor, imageName, lastConfidence } = data;
+  const { name, serving, total, carbs, protein, fiber, healthPts, ptColor, imageName, lastConfidence, isFromAPI } = data;
 
   caloriesValue.textContent = total + ' kcal';
   const confidenceText = lastConfidence !== null ? ` - Confidence ${(lastConfidence * 100).toFixed(1)}%` : '';
-  caloriesNote.textContent = `${name} x ${serving} serving(s) - ${imageName}${confidenceText}`;
-  caloriesNote.style.color = 'var(--muted)';
+  const sourceBadge = isFromAPI ? '<span class="tag" style="margin-right: 8px; background: var(--success); color: white;">LIVE API</span>' : '<span class="tag" style="margin-right: 8px; opacity: 0.6;">CACHED</span>';
+
+  caloriesNote.innerHTML = `${sourceBadge} ${name} x ${serving} serving(s) - ${imageName}${confidenceText}`;
+  caloriesNote.style.color = 'var(--text-muted)';
+
 
   nutritionResult.innerHTML = `
     <table>
@@ -73,4 +76,6 @@ export function updateResultDisplay(elements, data) {
   healthPointsResult.innerHTML = `
     <span style="color:${ptColor}">Health Points: ${healthPts > 0 ? '+' : ''}${healthPts}</span>
     <span class="small" style="margin-left:10px;">(${healthPts >= 5 ? 'Healthy choice!' : healthPts >= 0 ? 'Moderate' : 'Unhealthy - use sparingly'})</span>`;
+}
+althPts >= 0 ? 'Moderate' : 'Unhealthy - use sparingly'})</span>`;
 }

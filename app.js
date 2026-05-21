@@ -210,7 +210,7 @@ async function updateResultUI(selectedKey, serving) {
 
   ui.updateResultDisplay(
     { caloriesValue, caloriesNote, nutritionResult, healthPointsResult },
-    { ...foodData, serving, total, healthPts, ptColor, imageName, lastConfidence }
+    { ...foodData, serving, total, healthPts, ptColor, imageName, lastConfidence, isFromAPI }
   );
 
   addToLog(foodData.name, total, serving, foodData.carbs, foodData.protein, foodData.fiber, healthPts);
