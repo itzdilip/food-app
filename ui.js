@@ -82,5 +82,3 @@ export function updateResultDisplay(elements, data) {
     <span style="color:${ptColor}">Health Points: ${healthPts > 0 ? '+' : ''}${healthPts}</span>
     <span class="small" style="margin-left:10px;">(${healthPts >= 5 ? 'Healthy choice!' : healthPts >= 0 ? 'Moderate' : 'Unhealthy - use sparingly'})</span>`;
 }
-althPts >= 0 ? 'Moderate' : 'Unhealthy - use sparingly'})</span>`;
-}
