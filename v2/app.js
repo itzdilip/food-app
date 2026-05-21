@@ -180,24 +180,34 @@ async function updateResultUI(selectedKey, serving) {
     const query = LOCAL_DB_CACHE[selectedKey]?.name || selectedKey;
     foodData = await fetchNutritionFromAPI(query);
     showLoading(false);
-    if (foodData) isFromAPI = true;
+    
+    // Check if API actually returned valid data
+    if (foodData && foodData.calories > 0) {
+      isFromAPI = true;
+    }
   }
 
   if (!foodData) {
     foodData = LOCAL_DB_CACHE[selectedKey];
+    // If it was already synced before, it's effectively "online" data even if cached now
+    if (foodData && foodData.source === 'api') {
+      isFromAPI = true; 
+    }
+    
     if (!foodData) {
       caloriesNote.textContent = 'Food not found in local database.';
       return;
     }
   }
 
-  // Sync Logic: If API data is newer/different, update cache
-  if (isFromAPI) {
+  // Sync Logic: If fresh API data is different, update cache and UI
+  if (isFromAPI && dataSource.value === 'api') {
     const existing = LOCAL_DB_CACHE[selectedKey];
     const hasChanged = !existing || 
                      existing.calories !== foodData.calories || 
                      existing.carbs !== foodData.carbs || 
-                     existing.protein !== foodData.protein;
+                     existing.protein !== foodData.protein ||
+                     existing.source !== 'api';
 
     if (hasChanged) {
       LOCAL_DB_CACHE[selectedKey] = {
