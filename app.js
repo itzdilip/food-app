@@ -137,10 +137,12 @@ function showLoading(show) {
 
 async function updateResultUI(selectedKey, serving) {
   let foodData = null;
+  let isFromAPI = false;
 
   if (dataSource.value === 'api') {
     const query = FOOD_DATABASE[selectedKey]?.name || selectedKey;
     foodData = await fetchNutritionFromAPI(query);
+    if (foodData) isFromAPI = true;
   }
 
   // Fallback to local if API fails or mode is local
@@ -151,6 +153,29 @@ async function updateResultUI(selectedKey, serving) {
     } else {
       caloriesNote.textContent = 'Food not found in local database.';
       return;
+    }
+  }
+
+  // SYNC LOGIC: If we got fresh data from the API, update our local database "patch"
+  if (isFromAPI) {
+    const normalizedKey = selectedKey.toLowerCase().replace(/\s+/g, '_');
+    
+    // Check if the data has actually changed before updating
+    const existing = FOOD_DATABASE[selectedKey];
+    const hasChanged = !existing || 
+                     existing.calories !== foodData.calories || 
+                     existing.carbs !== foodData.carbs || 
+                     existing.protein !== foodData.protein;
+
+    if (hasChanged) {
+      FOOD_DATABASE[selectedKey] = {
+        ...foodData,
+        tip: existing?.tip || "Data refreshed via Live API."
+      };
+      // Re-render reference tables and diet chart with the updated values
+      ui.renderReferenceTables(FOOD_DATABASE, calorieTable, nutritionTable);
+      ui.renderDietChart(FOOD_DATABASE, dietChartList);
+      console.log(`Synced API data for: ${foodData.name}`);
     }
   }
 
