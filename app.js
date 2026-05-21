@@ -48,37 +48,44 @@ async function init() {
   initModel();
   setupEventListeners();
 
-  // Background Sync
-  if (Date.now() - LAST_SYNC_TIME > SYNC_INTERVAL && dataSource.value === 'api') {
+  // Async Pre-population: Start fetching latest data immediately if in API mode
+  if (dataSource.value === 'api') {
     backgroundUpdateDB();
   }
 }
 
 async function backgroundUpdateDB() {
-  console.log('Background Sync: Checking for updates...');
+  console.log('Syncing database with Live API...');
   const keys = Object.keys(LOCAL_DB_CACHE);
   let updatedCount = 0;
 
   for (const key of keys) {
+    // Only fetch if it hasn't been synced in this session or we want a fresh update
     const freshData = await fetchNutritionFromAPI(LOCAL_DB_CACHE[key].name);
+    
     if (freshData) {
       LOCAL_DB_CACHE[key] = {
         ...LOCAL_DB_CACHE[key],
         ...freshData,
-        tip: LOCAL_DB_CACHE[key].tip || "Data synced via Edamam API"
+        source: 'api',
+        tip: LOCAL_DB_CACHE[key].tip || "Verified via Edamam API"
       };
+      
+      // Update local storage and UI INSTANTLY for this specific item
+      localStorage.setItem('gain_food_cache', JSON.stringify(LOCAL_DB_CACHE));
+      localStorage.setItem('gain_last_sync', Date.now().toString());
+      ui.renderReferenceTables(LOCAL_DB_CACHE, calorieTable, nutritionTable);
+      
       updatedCount++;
+      console.log(`✓ Pre-populated: ${freshData.name}`);
     }
+
     // Respect API rate limits (Edamam Free tier is ~10/min)
-    await new Promise(r => setTimeout(r, 6000)); 
+    // We wait 6 seconds between requests to ensure we don't get blocked
+    await new Promise(r => setTimeout(r, 6500)); 
   }
 
-  if (updatedCount > 0) {
-    localStorage.setItem('gain_food_cache', JSON.stringify(LOCAL_DB_CACHE));
-    localStorage.setItem('gain_last_sync', Date.now().toString());
-    ui.renderReferenceTables(LOCAL_DB_CACHE, calorieTable, nutritionTable);
-    console.log(`Background Sync: Updated ${updatedCount} items.`);
-  }
+  console.log(`Pre-population Complete. Total items synced: ${updatedCount}`);
 }
 
 function loadTheme() {
