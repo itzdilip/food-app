@@ -13,7 +13,7 @@ const DATA_DIR = 'Food-Images/Food Classification';
 const MODEL_DIR = 'my_model';
 const IMAGE_SIZE = 224;
 const BATCH_SIZE = 32;
-const EPOCHS = 5;
+const EPOCHS = 15;
 
 async function loadImages() {
     const categories = fs.readdirSync(DATA_DIR).filter(f => fs.statSync(path.join(DATA_DIR, f)).isDirectory());
@@ -54,7 +54,6 @@ async function imageToTensor(filePath) {
                 .div(127.5).sub(1); // Normalize to [-1, 1]
         });
     } catch (e) {
-        // console.warn(`Skipping image ${filePath}: ${e.message}`);
         return null;
     }
 }
@@ -76,24 +75,26 @@ async function train() {
     const layer = mobilenet.getLayer('conv_pw_13_relu');
     const baseModel = tf.model({inputs: mobilenet.inputs, outputs: layer.output});
     
-    for (const layer of baseModel.layers) {
-        layer.trainable = false;
+    // Fine-tune some base layers
+    for (let i = 0; i < baseModel.layers.length; i++) {
+        // Unfreeze only the last few layers of MobileNet for better specialization
+        baseModel.layers[i].trainable = i > baseModel.layers.length - 10;
     }
 
     const model = tf.sequential();
     model.add(baseModel);
     model.add(tf.layers.flatten());
-    model.add(tf.layers.dense({ units: 128, activation: 'relu' }));
+    model.add(tf.layers.dense({ units: 256, activation: 'relu' }));
     model.add(tf.layers.dropout({ rate: 0.5 }));
     model.add(tf.layers.dense({ units: categories.length, activation: 'softmax' }));
 
     model.compile({
-        optimizer: tf.train.adam(0.0001),
+        optimizer: tf.train.adam(0.00002), // Lower learning rate for fine-tuning
         loss: 'categoricalCrossentropy',
         metrics: ['accuracy']
     });
 
-    console.log('Starting training with sanitization...');
+    console.log('Starting training with sanitization (15 Epochs)...');
 
     for (let epoch = 0; epoch < EPOCHS; epoch++) {
         console.log(`Epoch ${epoch + 1}/${EPOCHS}`);
@@ -110,7 +111,6 @@ async function train() {
             const batchFiles = shuffledImages.slice(start, end);
             const batchTargetLabels = shuffledLabels.slice(start, end);
 
-            // Load batch asynchronously in parallel
             const tensorPromises = batchFiles.map(img => imageToTensor(img));
             const tensors = await Promise.all(tensorPromises);
             
@@ -134,11 +134,11 @@ async function train() {
             batchLabels.dispose();
             validTensors.forEach(t => t.dispose());
 
-            if (i % 20 === 0) {
+            if (i % 40 === 0) {
                 console.log(`Batch ${i}/${numBatches} - loss: ${history[0].toFixed(4)} - acc: ${history[1].toFixed(4)}`);
             }
         }
-        console.log(`Epoch ${epoch + 1} finished - avg loss: ${(totalLoss/validBatches).toFixed(4)} - avg acc: ${(totalAcc/validBatches).toFixed(4)} - skipped: ${skippedInEpoch}`);
+        console.log(`Epoch ${epoch + 1} finished - avg loss: ${(totalLoss/validBatches).toFixed(4)} - avg acc: ${(totalAcc/validBatches).toFixed(4)}`);
     }
 
     console.log('Saving model...');
