@@ -10,12 +10,22 @@ export function renderReferenceTables(foodDatabase, calorieTable, nutritionTable
         <tr><th>Food</th><th>Calories / serving</th><th>Status</th></tr>
       </thead>
       <tbody>
-        ${Object.values(foodDatabase).map(f => `
+        ${Object.values(foodDatabase).map(f => {
+          const isOnline = f.source === 'api';
+          const statusHTML = isOnline 
+            ? `<span class="tag" style="font-size: 0.65rem; padding: 4px 10px; background: var(--success); color: white; border: none; display: inline-flex; align-items: center; gap: 5px;">
+                 <span style="font-size: 0.9rem;">●</span> ONLINE
+               </span>`
+            : `<span class="tag" style="font-size: 0.65rem; padding: 4px 10px; opacity: 0.5; display: inline-flex; align-items: center; gap: 5px; background: rgba(127,127,127,0.1);">
+                 <span style="font-size: 0.9rem;">○</span> OFFLINE
+               </span>`;
+          return `
           <tr>
             <td>${f.name}</td>
             <td>${f.calories}</td>
-            <td>${f.source === 'api' ? '<span class="tag" style="font-size: 0.6rem; padding: 2px 8px; background: var(--success); color: white;">Synced</span>' : '<span class="tag" style="font-size: 0.6rem; padding: 2px 8px; opacity: 0.5;">Local</span>'}</td>
-          </tr>`).join('')}
+            <td>${statusHTML}</td>
+          </tr>`;
+        }).join('')}
       </tbody>`;
   }
 
