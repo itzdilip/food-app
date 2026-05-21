@@ -7,6 +7,11 @@ let lastConfidence = null;
 let imageName = 'No image selected';
 const foodLog = JSON.parse(localStorage.getItem('gain_food_log')) || [];
 
+// Persistent Database Cache Logic
+let LOCAL_DB_CACHE = JSON.parse(localStorage.getItem('gain_food_cache')) || { ...FOOD_DATABASE };
+const LAST_SYNC_TIME = parseInt(localStorage.getItem('gain_last_sync') || '0');
+const SYNC_INTERVAL = 2 * 24 * 60 * 60 * 1000; // 2 Days
+
 // ===== DOM ELEMENTS =====
 const labelContainer = document.getElementById('label-container');
 const foodClass = document.getElementById('foodClass');
@@ -30,15 +35,50 @@ const apiKeyInput = document.getElementById('apiKey');
 const apiAppIdInput = document.getElementById('apiAppId');
 
 // ===== INITIALIZATION =====
-function init() {
+async function init() {
   loadTheme();
   loadSettings();
   populateDropdown();
-  ui.renderReferenceTables(FOOD_DATABASE, calorieTable, nutritionTable);
-  ui.renderDietChart(FOOD_DATABASE, dietChartList);
+  
+  // Use cached DB for UI rendering
+  ui.renderReferenceTables(LOCAL_DB_CACHE, calorieTable, nutritionTable);
+  ui.renderDietChart(LOCAL_DB_CACHE, dietChartList);
   ui.renderHistory(foodLog, historyBody);
+  
   initModel();
   setupEventListeners();
+
+  // Background Sync
+  if (Date.now() - LAST_SYNC_TIME > SYNC_INTERVAL && dataSource.value === 'api') {
+    backgroundUpdateDB();
+  }
+}
+
+async function backgroundUpdateDB() {
+  console.log('Background Sync: Checking for updates...');
+  const keys = Object.keys(LOCAL_DB_CACHE);
+  let updatedCount = 0;
+
+  for (const key of keys) {
+    const freshData = await fetchNutritionFromAPI(LOCAL_DB_CACHE[key].name);
+    if (freshData) {
+      LOCAL_DB_CACHE[key] = {
+        ...LOCAL_DB_CACHE[key],
+        ...freshData,
+        tip: LOCAL_DB_CACHE[key].tip || "Data synced via Edamam API"
+      };
+      updatedCount++;
+    }
+    // Respect API rate limits (Edamam Free tier is ~10/min)
+    await new Promise(r => setTimeout(r, 6000)); 
+  }
+
+  if (updatedCount > 0) {
+    localStorage.setItem('gain_food_cache', JSON.stringify(LOCAL_DB_CACHE));
+    localStorage.setItem('gain_last_sync', Date.now().toString());
+    ui.renderReferenceTables(LOCAL_DB_CACHE, calorieTable, nutritionTable);
+    console.log(`Background Sync: Updated ${updatedCount} items.`);
+  }
 }
 
 function loadTheme() {
@@ -55,7 +95,8 @@ function loadSettings() {
 }
 
 function populateDropdown() {
-  Object.entries(FOOD_DATABASE).forEach(([key, data]) => {
+  foodClass.innerHTML = '';
+  Object.entries(LOCAL_DB_CACHE).forEach(([key, data]) => {
     const option = document.createElement('option');
     option.value = key;
     option.textContent = data.name;
@@ -88,20 +129,10 @@ async function fetchNutritionFromAPI(foodName) {
   const appId = apiAppIdInput.value;
   const appKey = apiKeyInput.value;
   
-  if (!appId || !appKey) {
-    alert('Please enter your Edamam App ID and API Key in settings for Live API mode.');
-    dataSource.value = 'local';
-    apiSettings.style.display = 'none';
-    return null;
-  }
+  if (!appId || !appKey) return null;
 
-  showLoading(true);
   try {
-    const url = `https://api.edamam.com/api/nutrition-details?app_id=${appId}&app_key=${appKey}`;
-    // Edamam Nutrition Data API often requires a POST of the ingredients. 
-    // For a simple "search", the Food Database API is better.
     const searchUrl = `https://api.edamam.com/api/food-database/v2/parser?app_id=${appId}&app_key=${appKey}&ingr=${encodeURIComponent(foodName)}&nutrition-type=logging`;
-    
     const response = await fetch(searchUrl);
     const data = await response.json();
     
@@ -114,15 +145,13 @@ async function fetchNutritionFromAPI(foodName) {
         carbs: (nut.CHOCDF || 0).toFixed(1),
         protein: (nut.PROCNT || 0).toFixed(1),
         fiber: (nut.FIBTG || 0).toFixed(1),
-        healthScore: 5 // Default for API items
+        healthScore: 5 
       };
     }
     return null;
   } catch (err) {
     console.error('API Fetch Error:', err);
     return null;
-  } finally {
-    showLoading(false);
   }
 }
 
@@ -140,42 +169,38 @@ async function updateResultUI(selectedKey, serving) {
   let isFromAPI = false;
 
   if (dataSource.value === 'api') {
-    const query = FOOD_DATABASE[selectedKey]?.name || selectedKey;
+    showLoading(true);
+    const query = LOCAL_DB_CACHE[selectedKey]?.name || selectedKey;
     foodData = await fetchNutritionFromAPI(query);
+    showLoading(false);
     if (foodData) isFromAPI = true;
   }
 
-  // Fallback to local if API fails or mode is local
   if (!foodData) {
-    const local = FOOD_DATABASE[selectedKey];
-    if (local) {
-      foodData = { ...local };
-    } else {
+    foodData = LOCAL_DB_CACHE[selectedKey];
+    if (!foodData) {
       caloriesNote.textContent = 'Food not found in local database.';
       return;
     }
   }
 
-  // SYNC LOGIC: If we got fresh data from the API, update our local database "patch"
+  // Sync Logic: If API data is newer/different, update cache
   if (isFromAPI) {
-    const normalizedKey = selectedKey.toLowerCase().replace(/\s+/g, '_');
-    
-    // Check if the data has actually changed before updating
-    const existing = FOOD_DATABASE[selectedKey];
+    const existing = LOCAL_DB_CACHE[selectedKey];
     const hasChanged = !existing || 
                      existing.calories !== foodData.calories || 
                      existing.carbs !== foodData.carbs || 
                      existing.protein !== foodData.protein;
 
     if (hasChanged) {
-      FOOD_DATABASE[selectedKey] = {
+      LOCAL_DB_CACHE[selectedKey] = {
+        ...LOCAL_DB_CACHE[selectedKey],
         ...foodData,
-        tip: existing?.tip || "Data refreshed via Live API."
+        tip: existing?.tip || "Refreshed via Live API"
       };
-      // Re-render reference tables and diet chart with the updated values
-      ui.renderReferenceTables(FOOD_DATABASE, calorieTable, nutritionTable);
-      ui.renderDietChart(FOOD_DATABASE, dietChartList);
-      console.log(`Synced API data for: ${foodData.name}`);
+      localStorage.setItem('gain_food_cache', JSON.stringify(LOCAL_DB_CACHE));
+      ui.renderReferenceTables(LOCAL_DB_CACHE, calorieTable, nutritionTable);
+      console.log(`Cache Updated for: ${foodData.name}`);
     }
   }
 
@@ -305,12 +330,12 @@ async function predictFromImage(imgElement) {
     
     labelContainer.innerHTML = prediction.slice(0, 3).map(p => 
       `<div style="display:flex; justify-content:space-between; margin-bottom: 4px;">
-        <span>${FOOD_DATABASE[p.className]?.name || p.className}</span>
+        <span>${LOCAL_DB_CACHE[p.className]?.name || p.className}</span>
         <span style="font-weight:700; color: var(--primary);">${(p.probability * 100).toFixed(1)}%</span>
       </div>`
     ).join('');
     
-    if (top.probability > 0.65 && FOOD_DATABASE[top.className]) {
+    if (top.probability > 0.65 && LOCAL_DB_CACHE[top.className]) {
       foodClass.value = top.className;
       document.getElementById('calcBtn').click();
     } else {
@@ -325,13 +350,4 @@ async function predictFromImage(imgElement) {
   }
 }
 
-// Start the app
-init();
-
-
-// Start the app
-init();
-
-
-// Start the app
 init();
