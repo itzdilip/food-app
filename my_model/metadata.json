@@ -1,1 +1,32 @@
-{"tfjsVersion":"1.7.4","tmVersion":"2.4.12","packageVersion":"0.8.4-alpha2","packageName":"@teachablemachine/image","timeStamp":"2026-04-21T17:10:02.277Z","userMetadata":{},"modelName":"tm-my-image-model","labels":["IDLY","Masala-Dosa","Pizza","Jilabi","Dhokala","samosa","Panipuri","pakode","friedrice","dalmakni"],"imageSize":224}
+{
+  "tfjsVersion": "3.18.0",
+  "tmVersion": "2.4.12",
+  "packageVersion": "0.8.4-alpha2",
+  "packageName": "@teachablemachine/image",
+  "timeStamp": "2026-05-21T07:05:22.317Z",
+  "userMetadata": {},
+  "modelName": "tm-my-image-model",
+  "labels": [
+    "burger",
+    "butter_naan",
+    "chai",
+    "chapati",
+    "chole_bhature",
+    "dal_makhani",
+    "dhokla",
+    "fried_rice",
+    "idli",
+    "jalebi",
+    "kaathi_rolls",
+    "kadai_paneer",
+    "kulfi",
+    "masala_dosa",
+    "momos",
+    "paani_puri",
+    "pakode",
+    "pav_bhaji",
+    "pizza",
+    "samosa"
+  ],
+  "imageSize": 224
+}

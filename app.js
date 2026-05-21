@@ -16,15 +16,23 @@ const caloriesValue = document.getElementById('caloriesValue');
 const caloriesNote = document.getElementById('caloriesNote');
 const imageUpload = document.getElementById('imageUpload');
 const previewImg = document.getElementById('previewImg');
+const previewContainer = document.getElementById('previewContainer');
 const loadingOverlay = document.getElementById('loadingOverlay');
 const historyBody = document.getElementById('historyBody');
 const nutritionResult = document.getElementById('nutritionResult');
 const healthPointsResult = document.getElementById('healthPointsResult');
 const dietChartList = document.getElementById('dietChartList');
 
+// Settings Elements
+const dataSource = document.getElementById('dataSource');
+const apiSettings = document.getElementById('apiSettings');
+const apiKeyInput = document.getElementById('apiKey');
+const apiAppIdInput = document.getElementById('apiAppId');
+
 // ===== INITIALIZATION =====
 function init() {
   loadTheme();
+  loadSettings();
   populateDropdown();
   ui.renderReferenceTables(FOOD_DATABASE, calorieTable, nutritionTable);
   ui.renderDietChart(FOOD_DATABASE, dietChartList);
@@ -36,6 +44,14 @@ function init() {
 function loadTheme() {
   const savedTheme = localStorage.getItem('gain_theme') || 'light';
   document.documentElement.setAttribute('data-theme', savedTheme);
+}
+
+function loadSettings() {
+  const mode = localStorage.getItem('gain_data_mode') || 'local';
+  dataSource.value = mode;
+  apiSettings.style.display = mode === 'api' ? 'block' : 'none';
+  apiKeyInput.value = localStorage.getItem('gain_api_key') || '';
+  apiAppIdInput.value = localStorage.getItem('gain_api_id') || '';
 }
 
 function populateDropdown() {
@@ -52,53 +68,108 @@ async function initModel() {
   try {
     model = await tmImage.load(CONFIG.TM_MODEL_URL + 'model.json', CONFIG.TM_MODEL_URL + 'metadata.json');
     
-    // Model Warming: Run a dummy prediction to prevent lag on first real use
+    // Model Warming
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = 224;
     tempCanvas.height = 224;
     await model.predict(tempCanvas);
 
-    labelContainer.innerHTML = '<div style="color: var(--success)">✓ Model ready. Upload an image to start!</div>';
+    labelContainer.innerHTML = '<div style="color: var(--success)">✓ AI Model Ready</div>';
   } catch (err) {
     console.error(err);
-    labelContainer.innerHTML = '<div style="color: var(--danger)">✗ Model failed to load. Check console for details.</div>';
+    labelContainer.innerHTML = '<div style="color: var(--danger)">✗ Model failed to load</div>';
+  } finally {
+    showLoading(false);
+  }
+}
+
+// ===== API LOGIC (Edamam) =====
+async function fetchNutritionFromAPI(foodName) {
+  const appId = apiAppIdInput.value;
+  const appKey = apiKeyInput.value;
+  
+  if (!appId || !appKey) {
+    alert('Please enter your Edamam App ID and API Key in settings for Live API mode.');
+    dataSource.value = 'local';
+    apiSettings.style.display = 'none';
+    return null;
+  }
+
+  showLoading(true);
+  try {
+    const url = `https://api.edamam.com/api/nutrition-details?app_id=${appId}&app_key=${appKey}`;
+    // Edamam Nutrition Data API often requires a POST of the ingredients. 
+    // For a simple "search", the Food Database API is better.
+    const searchUrl = `https://api.edamam.com/api/food-database/v2/parser?app_id=${appId}&app_key=${appKey}&ingr=${encodeURIComponent(foodName)}&nutrition-type=logging`;
+    
+    const response = await fetch(searchUrl);
+    const data = await response.json();
+    
+    if (data.parsed && data.parsed.length > 0) {
+      const food = data.parsed[0].food;
+      const nut = food.nutrients;
+      return {
+        name: food.label,
+        calories: Math.round(nut.ENERC_KCAL || 0),
+        carbs: (nut.CHOCDF || 0).toFixed(1),
+        protein: (nut.PROCNT || 0).toFixed(1),
+        fiber: (nut.FIBTG || 0).toFixed(1),
+        healthScore: 5 // Default for API items
+      };
+    }
+    return null;
+  } catch (err) {
+    console.error('API Fetch Error:', err);
+    return null;
   } finally {
     showLoading(false);
   }
 }
 
 // ===== CORE LOGIC =====
-function calcHealthPoints(foodKey, servings) {
-  const n = FOOD_DATABASE[foodKey];
-  if (!n) return 0;
-  // Deterministic formula: (HealthScore - 5) * 5, scaled by servings
-  return Math.round((n.healthScore - 5) * 5 * servings);
+function calcHealthPoints(score, servings) {
+  return Math.round((score - 5) * 5 * servings);
 }
 
 function showLoading(show) {
   loadingOverlay.style.display = show ? 'flex' : 'none';
 }
 
-function updateResultUI(selectedKey, serving, total) {
-  const n = FOOD_DATABASE[selectedKey] || {};
-  const carbs = n.carbs ? (n.carbs * serving).toFixed(1) : 'N/A';
-  const protein = n.protein ? (n.protein * serving).toFixed(1) : 'N/A';
-  const fiber = n.fiber ? (n.fiber * serving).toFixed(1) : 'N/A';
-  const healthPts = calcHealthPoints(selectedKey, serving);
+async function updateResultUI(selectedKey, serving) {
+  let foodData = null;
+
+  if (dataSource.value === 'api') {
+    const query = FOOD_DATABASE[selectedKey]?.name || selectedKey;
+    foodData = await fetchNutritionFromAPI(query);
+  }
+
+  // Fallback to local if API fails or mode is local
+  if (!foodData) {
+    const local = FOOD_DATABASE[selectedKey];
+    if (local) {
+      foodData = { ...local };
+    } else {
+      caloriesNote.textContent = 'Food not found in local database.';
+      return;
+    }
+  }
+
+  const total = Math.round(foodData.calories * serving);
+  const healthPts = calcHealthPoints(foodData.healthScore, serving);
   const ptColor = healthPts >= 0 ? 'var(--primary)' : 'var(--danger)';
 
   ui.updateResultDisplay(
     { caloriesValue, caloriesNote, nutritionResult, healthPointsResult },
-    { name: n.name, serving, total, carbs, protein, fiber, healthPts, ptColor, imageName, lastConfidence }
+    { ...foodData, serving, total, healthPts, ptColor, imageName, lastConfidence }
   );
 
-  addToLog(selectedKey, total, serving, carbs, protein, fiber, healthPts);
+  addToLog(foodData.name, total, serving, foodData.carbs, foodData.protein, foodData.fiber, healthPts);
 }
 
-function addToLog(key, calories, servings, carbs, protein, fiber, healthPoints) {
+function addToLog(name, calories, servings, carbs, protein, fiber, healthPoints) {
   const entry = {
     timestamp: new Date().toLocaleTimeString(),
-    food: FOOD_DATABASE[key].name,
+    food: name,
     calories,
     servings,
     carbs,
@@ -108,7 +179,7 @@ function addToLog(key, calories, servings, carbs, protein, fiber, healthPoints) 
     confidence: lastConfidence !== null ? (lastConfidence * 100).toFixed(1) + '%' : 'N/A',
     image: imageName
   };
-  foodLog.unshift(entry); // Add to beginning
+  foodLog.unshift(entry);
   localStorage.setItem('gain_food_log', JSON.stringify(foodLog));
   ui.renderHistory(foodLog, historyBody);
 }
@@ -123,15 +194,23 @@ function setupEventListeners() {
     localStorage.setItem('gain_theme', newTheme);
   });
 
+  dataSource.addEventListener('change', (e) => {
+    const mode = e.target.value;
+    apiSettings.style.display = mode === 'api' ? 'block' : 'none';
+    localStorage.setItem('gain_data_mode', mode);
+  });
+
+  apiKeyInput.addEventListener('input', (e) => localStorage.setItem('gain_api_key', e.target.value));
+  apiAppIdInput.addEventListener('input', (e) => localStorage.setItem('gain_api_id', e.target.value));
+
   document.getElementById('calcBtn').addEventListener('click', () => {
     const selected = foodClass.value;
     const serving = parseFloat(document.getElementById('serving').value || '1');
-    const total = Math.round((FOOD_DATABASE[selected]?.calories || 0) * serving);
-    updateResultUI(selected, serving, total);
+    updateResultUI(selected, serving);
   });
 
   document.getElementById('downloadBtn').addEventListener('click', () => {
-    const text = `G.A.I.N Result\n------------\nFood: ${FOOD_DATABASE[foodClass.value].name}\nEstimated Calories: ${caloriesValue.textContent}\nDetails: ${caloriesNote.textContent}`;
+    const text = `G.A.I.N Result\n------------\nFood: ${caloriesNote.textContent.split(' x ')[0]}\nEstimated Calories: ${caloriesValue.textContent}\nDetails: ${caloriesNote.textContent}`;
     const blob = new Blob([text], { type: 'text/plain' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -162,7 +241,7 @@ function setupEventListeners() {
       caloriesNote.textContent = 'Upload an image to predict food and calories.';
       nutritionResult.innerHTML = '';
       healthPointsResult.innerHTML = '';
-      previewImg.style.display = 'none';
+      previewContainer.style.display = 'none';
       lastConfidence = null;
       imageName = 'No image selected';
     }
@@ -175,7 +254,7 @@ function setupEventListeners() {
     const reader = new FileReader();
     reader.onload = () => {
       previewImg.src = reader.result;
-      previewImg.style.display = 'block';
+      previewContainer.style.display = 'block';
       const img = new Image();
       img.onload = () => predictFromImage(img);
       img.src = reader.result;
@@ -194,9 +273,9 @@ async function predictFromImage(imgElement) {
     lastConfidence = top.probability;
     
     labelContainer.innerHTML = prediction.slice(0, 3).map(p => 
-      `<div style="display:flex; justify-content:space-between;">
+      `<div style="display:flex; justify-content:space-between; margin-bottom: 4px;">
         <span>${FOOD_DATABASE[p.className]?.name || p.className}</span>
-        <span style="font-weight:700;">${(p.probability * 100).toFixed(1)}%</span>
+        <span style="font-weight:700; color: var(--primary);">${(p.probability * 100).toFixed(1)}%</span>
       </div>`
     ).join('');
     
@@ -214,6 +293,10 @@ async function predictFromImage(imgElement) {
     showLoading(false);
   }
 }
+
+// Start the app
+init();
+
 
 // Start the app
 init();

@@ -24,14 +24,14 @@
         <button class="secondary" id="themeBtn">Toggle Theme</button>
     </header>
 
-    <section class="hero">
+    <section class="glass-panel">
         <p>G.A.I.N (Gain Advantage through Intelligent Nutrition) uses AI to classify food and track your nutritional intake. Earn health points based on your choices to potentially lower your health insurance premiums.</p>
         <div id="label-container" style="margin-top: 15px;"></div>
     </section>
 
     <main class="grid">
         <!-- Detection Panel -->
-        <section class="card" aria-labelledby="detect-heading">
+        <section class="glass-panel" aria-labelledby="detect-heading">
             <h2 id="detect-heading">Upload & Detect</h2>
             
             <label for="imageUpload">Step 1: Upload Food Image</label>
@@ -47,31 +47,51 @@
                 <button id="calcBtn" aria-label="Calculate calories">Calculate Now</button>
                 <button class="secondary" id="downloadBtn" aria-label="Save result as text">Save Result</button>
                 <button class="secondary" id="exportBtn" aria-label="Export session log to CSV">Export CSV</button>
-                <button class="secondary" id="resetBtn" style="color: var(--danger)" aria-label="Reset session history">Reset Session</button>
+                <button class="secondary danger" id="resetBtn" aria-label="Reset session history">Reset Session</button>
             </div>
 
-            <div class="preview">
-                <div class="small">Image Preview</div>
+            <div class="preview-container" id="previewContainer">
                 <img id="previewImg" class="preview-img" alt="Food Preview">
             </div>
 
-            <div class="result">
-                <div class="big" id="caloriesValue">--</div>
+            <div class="result-display" id="resultDisplay">
+                <div class="big-stat" id="caloriesValue">--</div>
                 <div class="small" id="caloriesNote">Waiting for input...</div>
                 <div id="nutritionResult" style="margin-top:12px;"></div>
                 <div id="healthPointsResult" style="margin-top:8px; font-weight:700;"></div>
+            </div>
+
+            <!-- API Settings -->
+            <div class="settings-group">
+                <h2>Data Source Settings</h2>
+                <label for="dataSource">Data Mode</label>
+                <select id="dataSource">
+                    <option value="local">Standard (Built-in Database)</option>
+                    <option value="api">Live API (Edamam)</option>
+                </select>
+                
+                <div id="apiSettings" style="display: none;">
+                    <label for="apiKey">Edamam API Key</label>
+                    <input type="password" id="apiKey" placeholder="Enter your Edamam API Key">
+                    <label for="apiAppId">Edamam App ID</label>
+                    <input type="text" id="apiAppId" placeholder="Enter your Edamam App ID">
+                    <div class="settings-help">
+                        Need a key? Sign up for free at <a href="https://developer.edamam.com/edamam-nutrition-api" target="_blank">developer.edamam.com</a>. 
+                        Live API mode provides real-time data for any food detected.
+                    </div>
+                </div>
             </div>
         </section>
 
         <!-- Data References -->
         <aside>
-            <div class="card">
+            <div class="glass-panel">
                 <h2>Calories Map</h2>
                 <p class="small">Reference values for 1 standard serving.</p>
                 <table id="calorieTable"></table>
             </div>
             
-            <div class="card" style="margin-top:20px;">
+            <div class="glass-panel">
                 <h2>Nutrition Reference</h2>
                 <p class="small">Nutritional values per 100g serving.</p>
                 <table id="nutritionTable"></table>
@@ -80,31 +100,33 @@
     </main>
 
     <!-- Session History -->
-    <section class="card history-card">
+    <section class="glass-panel">
         <h2>Session History</h2>
-        <table class="history-table">
-            <thead>
-                <tr>
-                    <th>Time</th>
-                    <th>Food</th>
-                    <th>Calories</th>
-                    <th>HP</th>
-                    <th>Confidence</th>
-                </tr>
-            </thead>
-            <tbody id="historyBody">
-                <!-- Entries will appear here -->
-            </tbody>
-        </table>
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Food</th>
+                        <th>Calories</th>
+                        <th>HP</th>
+                        <th>Confidence</th>
+                    </tr>
+                </thead>
+                <tbody id="historyBody">
+                    <!-- Entries will appear here -->
+                </tbody>
+            </table>
+        </div>
     </section>
 
     <!-- Diet Chart -->
-    <section class="card" style="margin-top:20px;">
+    <section class="glass-panel">
         <h2>Dietary Guidelines</h2>
-        <ul id="dietChartList">
+        <ul id="dietChartList" style="list-style: none;">
             <!-- Populated via JS -->
         </ul>
-        <div class="small" style="padding-top: 15px; border-top: 1px solid var(--border); margin-top: 15px;">
+        <div class="small" style="padding-top: 15px; border-top: 1px solid var(--glass-border); margin-top: 15px;">
             <strong>ℹ Balanced Plate Advice:</strong> Aim for 50% vegetables, 25% protein, and 25% whole grains.
         </div>
     </section>

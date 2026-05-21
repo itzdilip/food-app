@@ -7,11 +7,11 @@
 
 ## Overview
 
-G.A.I.N is an Artificial Intelligence system backed by a trained Teachable Machine model that classifies **10 types of Indian and popular food**. Based on the food classification, calories, nutritional values (carbohydrates, proteins, fiber) and health points are associated. Points can be positive or negative depending on the food type, and the cumulative balance of points over a yearly time frame determines **discounts on health insurance premiums**.
+G.A.I.N is an Artificial Intelligence system backed by a trained Teachable Machine model that classifies **20 types of Indian and popular food**. Based on the food classification, calories, nutritional values (carbohydrates, proteins, fiber) and health points are associated. Points can be positive or negative depending on the food type, and the cumulative balance of points over a yearly time frame determines **discounts on health insurance premiums**.
 
 ## Live Demo
 
-The app is deployed via **GitHub Pages** from the `itzdilip-patch-1` branch:
+The app is deployed via **GitHub Pages**:
 
 **URL:** https://itzdilip.github.io/G-A-I-N/
 
@@ -27,23 +27,23 @@ Comprehensive documentation for G.A.I.N is available in the [`docs/`](./docs/) d
 
 ```
 G-A-I-N/
-├── .github/
-│   └── workflows/        # GitHub Actions CI/CD workflows
-├── my_model/             # Teachable Machine trained model files
-│   ├── model.json
-│   └── metadata.json
+├── Food-Images/          # Training dataset (20 categories)
+├── my_model/             # Trained model files (model.json, metadata.json, weights.bin)
 ├── app.js                # Main application logic
 ├── data.js               # Centralized food & nutrition database
+├── train.js              # Node.js training script
 ├── style.css             # Modernized styling
-├── index.html            # Main entry point (Refactored ADR2 Edition)
+├── index.html            # Main entry point
 └── README.md             # This file
 ```
 
 ## Features
 
+- **Expanded AI Model:** Trained on 20 categories with ~6000 images using transfer learning.
+- **Image Sanitization:** Training pipeline includes robust image cleaning for 100% data utilization.
 - **Modular Architecture:** Code split into ES6 modules for better maintainability.
 - **Centralized Database:** All nutritional data and diet tips managed in a single `data.js` file.
-- **AI-Powered Detection:** Upload a food image and auto-detect the food type using a Teachable Machine AI model.
+- **AI-Powered Detection:** Upload a food image and auto-detect the food type using a Teachable Machine compatible AI model.
 - **Enhanced UI/UX:**
     - Loading states with spinners during model initialization and prediction.
     - **Session History:** Interactive table showing recent detections and health points.
@@ -54,20 +54,30 @@ G-A-I-N/
 - **Responsive Design:** Optimized for both mobile and desktop with a modern "Card" based layout.
 - **Dark / Light Theme:** Seamless toggle for user preference.
 
-## Supported Food Classes
+## Supported Food Classes (20)
 
-| Food | Calories / Serving | Carbs (g) | Protein (g) | Fiber (g) |
-|---|---|---|---|---|
-| IDLY | 58 kcal | 12.5 | 2.3 | 1.2 |
-| Masala-Dosa | 220 kcal | 32.0 | 5.0 | 1.7 |
-| Pizza | 285 kcal | 36.0 | 12.0 | 2.3 |
-| Jilabi | 300 kcal | 62.4 | 4.2 | 1.0 |
-| Dhokala | 160 kcal | 22.0 | 6.0 | 2.0 |
-| Dal Makhani | 181 kcal | 20.5 | 6.8 | 3.5 |
-| Samosa | 308 kcal | 32.0 | 5.0 | 2.0 |
-| Pakode | 287 kcal | 37.7 | 11.3 | 10.7 |
-| Pani Puri | 170 kcal | 24.7 | 4.0 | 3.7 |
-| Fried Rice | 168 kcal | 21.1 | 6.3 | 0.7 |
+| Food Category | Calories / Serving | Health Score |
+|---|---|---|
+| Burger | 250 kcal | 4 |
+| Butter Naan | 260 kcal | 5 |
+| Chai | 80 kcal | 5 |
+| Chapati | 70 kcal | 9 |
+| Chole Bhature | 450 kcal | 3 |
+| Dal Makhani | 181 kcal | 7 |
+| Dhokla | 160 kcal | 7 |
+| Fried Rice | 168 kcal | 5 |
+| Idli | 58 kcal | 8 |
+| Jalebi | 300 kcal | 1 |
+| Kaathi Rolls | 280 kcal | 6 |
+| Kadai Paneer | 250 kcal | 7 |
+| Kulfi | 180 kcal | 2 |
+| Masala Dosa | 220 kcal | 6 |
+| Momos | 200 kcal | 5 |
+| Pani Puri | 170 kcal | 4 |
+| Pakoda | 287 kcal | 4 |
+| Pav Bhaji | 400 kcal | 4 |
+| Pizza | 285 kcal | 3 |
+| Samosa | 308 kcal | 3 |
 
 ## Tech Stack
 
