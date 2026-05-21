@@ -196,6 +196,7 @@ async function updateResultUI(selectedKey, serving) {
       LOCAL_DB_CACHE[selectedKey] = {
         ...LOCAL_DB_CACHE[selectedKey],
         ...foodData,
+        source: 'api',
         tip: existing?.tip || "Refreshed via Live API"
       };
       localStorage.setItem('gain_food_cache', JSON.stringify(LOCAL_DB_CACHE));

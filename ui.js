@@ -7,10 +7,15 @@ export function renderReferenceTables(foodDatabase, calorieTable, nutritionTable
   if (calorieTable) {
     calorieTable.innerHTML = `
       <thead>
-        <tr><th>Food</th><th>Calories / serving</th></tr>
+        <tr><th>Food</th><th>Calories / serving</th><th>Status</th></tr>
       </thead>
       <tbody>
-        ${Object.values(foodDatabase).map(f => `<tr><td>${f.name}</td><td>${f.calories}</td></tr>`).join('')}
+        ${Object.values(foodDatabase).map(f => `
+          <tr>
+            <td>${f.name}</td>
+            <td>${f.calories}</td>
+            <td>${f.source === 'api' ? '<span class="tag" style="font-size: 0.6rem; padding: 2px 8px; background: var(--success); color: white;">Synced</span>' : '<span class="tag" style="font-size: 0.6rem; padding: 2px 8px; opacity: 0.5;">Local</span>'}</td>
+          </tr>`).join('')}
       </tbody>`;
   }
 
