@@ -203,6 +203,12 @@ function setupEventListeners() {
   apiKeyInput.addEventListener('input', (e) => localStorage.setItem('gain_api_key', e.target.value));
   apiAppIdInput.addEventListener('input', (e) => localStorage.setItem('gain_api_id', e.target.value));
 
+  document.getElementById('saveSettingsBtn').addEventListener('click', () => {
+    localStorage.setItem('gain_api_key', apiKeyInput.value);
+    localStorage.setItem('gain_api_id', apiAppIdInput.value);
+    alert('API Settings Saved Successfully!');
+  });
+
   document.getElementById('calcBtn').addEventListener('click', () => {
     const selected = foodClass.value;
     const serving = parseFloat(document.getElementById('serving').value || '1');
