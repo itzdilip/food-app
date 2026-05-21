@@ -1,0 +1,5 @@
+G.A.I.N Result
+------------
+Food: Low confidence prediction. Please verify or select food manually.
+Estimated Calories: --
+Details: Low confidence prediction. Please verify or select food manually.

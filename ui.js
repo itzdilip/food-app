@@ -7,25 +7,10 @@ export function renderReferenceTables(foodDatabase, calorieTable, nutritionTable
   if (calorieTable) {
     calorieTable.innerHTML = `
       <thead>
-        <tr><th>Food</th><th>Calories / serving</th><th>Status</th></tr>
+        <tr><th>Food</th><th>Calories / serving</th></tr>
       </thead>
       <tbody>
-        ${Object.values(foodDatabase).map(f => {
-          const isOnline = f.source === 'api';
-          const statusHTML = isOnline 
-            ? `<span class="tag" style="font-size: 0.65rem; padding: 4px 10px; background: var(--success); color: white; border: none; display: inline-flex; align-items: center; gap: 5px;">
-                 <span style="font-size: 0.9rem;">●</span> ONLINE
-               </span>`
-            : `<span class="tag" style="font-size: 0.65rem; padding: 4px 10px; opacity: 0.5; display: inline-flex; align-items: center; gap: 5px; background: rgba(127,127,127,0.1);">
-                 <span style="font-size: 0.9rem;">○</span> OFFLINE
-               </span>`;
-          return `
-          <tr>
-            <td>${f.name}</td>
-            <td>${f.calories}</td>
-            <td>${statusHTML}</td>
-          </tr>`;
-        }).join('')}
+        ${Object.values(foodDatabase).map(f => `<tr><td>${f.name}</td><td>${f.calories}</td></tr>`).join('')}
       </tbody>`;
   }
 
@@ -68,15 +53,12 @@ export function renderHistory(foodLog, historyBody) {
 
 export function updateResultDisplay(elements, data) {
   const { caloriesValue, caloriesNote, nutritionResult, healthPointsResult } = elements;
-  const { name, serving, total, carbs, protein, fiber, healthPts, ptColor, imageName, lastConfidence, isFromAPI } = data;
+  const { name, serving, total, carbs, protein, fiber, healthPts, ptColor, imageName, lastConfidence } = data;
 
   caloriesValue.textContent = total + ' kcal';
   const confidenceText = lastConfidence !== null ? ` - Confidence ${(lastConfidence * 100).toFixed(1)}%` : '';
-  const sourceBadge = isFromAPI ? '<span class="tag" style="margin-right: 8px; background: var(--success); color: white;">LIVE API</span>' : '<span class="tag" style="margin-right: 8px; opacity: 0.6;">CACHED</span>';
-
-  caloriesNote.innerHTML = `${sourceBadge} ${name} x ${serving} serving(s) - ${imageName}${confidenceText}`;
-  caloriesNote.style.color = 'var(--text-muted)';
-
+  caloriesNote.textContent = `${name} x ${serving} serving(s) - ${imageName}${confidenceText}`;
+  caloriesNote.style.color = 'var(--muted)';
 
   nutritionResult.innerHTML = `
     <table>
