@@ -155,12 +155,20 @@ async function fetchNutritionFromAPI(foodName) {
     const searchUrl = `https://api.edamam.com/api/food-database/v2/parser?app_id=${appId}&app_key=${appKey}&ingr=${encodeURIComponent(foodName)}&nutrition-type=logging`;
     const response = await fetch(searchUrl);
     
+    console.log(`API Request: ${foodName} - Status: ${response.status}`);
+
     if (!response.ok) {
       if (response.status === 401 || response.status === 403) {
-        console.error('API Error: 401/403 - Unauthorized. Check your credentials.');
+        console.error('CRITICAL: API Unauthorized. Your App ID or Key is incorrect.');
         return 'AUTH_ERROR';
       }
-      console.error(`API Error: ${response.status} ${response.statusText}`);
+      return null;
+    }
+
+    // Check if the response is actually JSON before parsing
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      console.error('API Error: Received non-JSON response. (Likely an HTML error page)');
       return null;
     }
 
@@ -169,7 +177,6 @@ async function fetchNutritionFromAPI(foodName) {
     if (data.parsed && data.parsed.length > 0) {
       const food = data.parsed[0].food;
       const nut = food.nutrients;
-      console.log(`API Success: Fetched data for ${foodName}`);
       return {
         name: food.label,
         calories: Math.round(nut.ENERC_KCAL || 0),
@@ -181,7 +188,7 @@ async function fetchNutritionFromAPI(foodName) {
     }
     return null;
   } catch (err) {
-    console.error('API Fetch Exception:', err);
+    console.error('API Network/Parse Exception:', err);
     return null;
   }
 }
